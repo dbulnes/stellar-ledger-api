@@ -1,0 +1,16 @@
+{
+  "name": "sledger-api",
+  "version": "0.1.0",
+  "description": "Javascript API for communication with the Stellar Ledger App",
+  "main": "./src/index.js",
+  "scripts": {
+    "test": "node test/tests-node.js"
+  },
+  "author": "lenondupe@gmail.com",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "base32.js": "^0.1.0",
+    "crc": "^3.5.0",
+    "ledgerco": "^1.1.3"
+  }
+}
