@@ -38,16 +38,22 @@ SledgerUtils.splitPath = function(path) {
 	return result;
 }
 
-SledgerUtils.encodeEd25519PublicKey = function(data) {
-  data              = new Buffer(data);
-  let versionByte   = 6 << 3; // ed25519PublicKey (G)
-  let versionBuffer = new Buffer([versionByte]);
-  let payload       = Buffer.concat([versionBuffer, data]);
-  let checksum      = new Buffer(2);
-  checksum.writeUInt16LE(crc.crc16xmodem(payload), 0);
-  let unencoded     = Buffer.concat([payload, checksum]);
-
-  return base32.encode(unencoded);
+SledgerUtils.foreach = function (arr, callback) {
+	var deferred = Q.defer();
+	var iterate = function (index, array, result) {
+		if (index >= array.length) {
+			deferred.resolve(result);
+			return ;
+		}
+		callback(array[index], index).then(function (res) {
+			result.push(res);
+			iterate(index + 1, array, result);
+		}).fail(function (ex) {
+			deferred.reject(ex);
+		}).done();
+	};
+	iterate(0, arr, []);
+	return deferred.promise;
 }
 
 module.exports = SledgerUtils;

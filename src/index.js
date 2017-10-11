@@ -19,6 +19,7 @@
 
 var Q = require('q');
 var utils = require('./utils');
+var StellarBase = require('stellar-base');
 
 var LedgerStr = function(comm) {
 	this.comm = comm;
@@ -39,7 +40,7 @@ LedgerStr.prototype.getAppConfiguration_async = function() {
 	});
 }
 
-LedgerStr.prototype.getAddress_async = function(path, boolDisplay, boolChaincode) {
+LedgerStr.prototype.getPublicKey_async = function(path, boolDisplay, boolChaincode) {
 	var splitPath = utils.splitPath(path);
 	var buffer = new Buffer(5 + 1 + splitPath.length * 4);
 	buffer[0] = 0xe0;
@@ -55,12 +56,71 @@ LedgerStr.prototype.getAddress_async = function(path, boolDisplay, boolChaincode
 		var result = {};
 		var response = new Buffer(response, 'hex');
 		var publicKeyLength = response[0];
-		result['publicKey'] = utils.encodeEd25519PublicKey(response.slice(1, 1 + publicKeyLength));
+		result['publicKey'] = StellarBase.StrKey.encodeEd25519PublicKey(response.slice(1, 1 + publicKeyLength));
 		if (boolChaincode) {
 			result['chainCode'] = response.slice(1 + publicKeyLength, 1 + publicKeyLength + 32).toString('hex');
 		}
 		return result;
 	});
+}
+
+LedgerStr.prototype.getPrivateKey_async = function(path) {
+	var splitPath = utils.splitPath(path);
+	var buffer = new Buffer(5 + 1 + splitPath.length * 4);
+	buffer[0] = 0xe0;
+	buffer[1] = 0x08;
+	buffer[2] = 0x00;
+	buffer[3] = 0x00;
+	buffer[4] = 1 + splitPath.length * 4;
+	buffer[5] = splitPath.length;
+	splitPath.forEach(function (element, index) {
+		buffer.writeUInt32BE(element, 6 + 4 * index);
+	});
+	return this.comm.exchange(buffer.toString('hex'), [0x9000]).then(function(response) {
+		var result = {};
+		var response = new Buffer(response, 'hex');
+		var secretKeyLength = response[0];
+        result['secretKey'] = StellarBase.StrKey.encodeEd25519SecretSeed(response.slice(1, 1 + secretKeyLength));
+		return result;
+	});
+}
+
+LedgerStr.prototype.signTransaction_async = function(path, rawTx) {
+	var splitPath = utils.splitPath(path);
+	var offset = 0;
+	var apdus = [];
+	var response = [];
+	var self = this;
+	while (offset != rawTx.length) {
+		var maxChunkSize = (offset == 0 ? (150 - 1 - splitPath.length * 4) : 150)
+		var chunkSize = (offset + maxChunkSize > rawTx.length ? rawTx.length - offset : maxChunkSize);
+		var buffer = new Buffer(offset == 0 ? 5 + 1 + splitPath.length * 4 + chunkSize : 5 + chunkSize);
+		buffer[0] = 0xe0;
+		buffer[1] = 0x04;
+		buffer[2] = (offset == 0 ? 0x00 : 0x80);
+		buffer[3] = 0x00;
+		buffer[4] = (offset == 0 ? 1 + splitPath.length * 4 + chunkSize : chunkSize);
+		if (offset == 0) {
+			buffer[5] = splitPath.length;
+			splitPath.forEach(function (element, index) {
+				buffer.writeUInt32BE(element, 6 + 4 * index);
+			});
+			rawTx.copy(buffer, 6 + 4 * splitPath.length, offset, offset + chunkSize);
+		}
+		else {
+			rawTx.copy(buffer, 5, offset, offset + chunkSize);
+		}
+		apdus.push(buffer.toString('hex'));
+		offset += chunkSize;
+	}
+	return utils.foreach(apdus, function(apdu) {
+		return self.comm.exchange(apdu, [0x9000]).then(function(apduResponse) {
+			response = apduResponse;
+		})
+	}).then(function() {
+		response = new Buffer(response, 'hex');
+        return response.slice(0, response.length - 2);
+	})
 }
 
 module.exports = LedgerStr;

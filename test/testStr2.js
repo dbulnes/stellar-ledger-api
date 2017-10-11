@@ -15,13 +15,22 @@
 *  limitations under the License.
 ********************************************************************************/
 
+var StellarBase = require('stellar-base');
+
 function runTest(comm, strLedger, timeout) {
 
     return comm.create_async(timeout, true).then(function (comm) {
-        return new strLedger(comm).getAddress_async("44'/148'/0'/0'/0'").then(function (result) {
-            console.log(result);
-        })
-    })
+        var bip32Path = "44'/148'/0'/0'/123'";
+        var str = new strLedger(comm);
+        str.getPublicKey_async(bip32Path).then(function (result) {
+            console.log('publicKey: ' + result.publicKey);
+            str.getPrivateKey_async(bip32Path).then(function (result) {
+                var keyPair = StellarBase.Keypair.fromSecret(result.secretKey);
+                console.log('secretKey : ' + keyPair.secret());
+                console.log('fromSecret:   ' + keyPair.publicKey());
+            });
+        });
+    });
 
 }
 

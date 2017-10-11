@@ -28,7 +28,7 @@ strLedger = require('../src');
 
 var Q = require('q');
 
-var TIMEOUT = 200;
+var TIMEOUT = 10000;
 
 var tests = [
     {name: 'testStr2', run: require('./testStr2')}
