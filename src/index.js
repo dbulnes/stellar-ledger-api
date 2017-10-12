@@ -19,7 +19,6 @@
 
 var Q = require('q');
 var utils = require('./utils');
-var StellarBase = require('stellar-base');
 
 var LedgerStr = function(comm) {
 	this.comm = comm;
@@ -53,39 +52,13 @@ LedgerStr.prototype.getPublicKey_async = function(path, boolDisplay, boolChainco
 		buffer.writeUInt32BE(element, 6 + 4 * index);
 	});
 	return this.comm.exchange(buffer.toString('hex'), [0x9000]).then(function(response) {
-		var result = {};
 		var response = new Buffer(response, 'hex');
 		var publicKeyLength = response[0];
-		result['publicKey'] = StellarBase.StrKey.encodeEd25519PublicKey(response.slice(1, 1 + publicKeyLength));
-		if (boolChaincode) {
-			result['chainCode'] = response.slice(1 + publicKeyLength, 1 + publicKeyLength + 32).toString('hex');
-		}
-		return result;
+		return response.slice(1, 1 + publicKeyLength);
 	});
 }
 
-LedgerStr.prototype.getPrivateKey_async = function(path) {
-	var splitPath = utils.splitPath(path);
-	var buffer = new Buffer(5 + 1 + splitPath.length * 4);
-	buffer[0] = 0xe0;
-	buffer[1] = 0x08;
-	buffer[2] = 0x00;
-	buffer[3] = 0x00;
-	buffer[4] = 1 + splitPath.length * 4;
-	buffer[5] = splitPath.length;
-	splitPath.forEach(function (element, index) {
-		buffer.writeUInt32BE(element, 6 + 4 * index);
-	});
-	return this.comm.exchange(buffer.toString('hex'), [0x9000]).then(function(response) {
-		var result = {};
-		var response = new Buffer(response, 'hex');
-		var secretKeyLength = response[0];
-        result['secretKey'] = StellarBase.StrKey.encodeEd25519SecretSeed(response.slice(1, 1 + secretKeyLength));
-		return result;
-	});
-}
-
-LedgerStr.prototype.signTransaction_async = function(path, rawTx) {
+LedgerStr.prototype.sign_async = function(path, rawTx) {
 	var splitPath = utils.splitPath(path);
 	var offset = 0;
 	var apdus = [];

@@ -15,19 +15,23 @@
 *  limitations under the License.
 ********************************************************************************/
 
-var StellarBase = require('stellar-base');
+var ed25519 = require("ed25519");
 
 function runTest(comm, strLedger, timeout) {
 
     return comm.create_async(timeout, true).then(function (comm) {
+
         var bip32Path = "44'/148'/0'/0'/123'";
         var str = new strLedger(comm);
-        str.getPublicKey_async(bip32Path).then(function (result) {
-            console.log('publicKey: ' + result.publicKey);
-            str.getPrivateKey_async(bip32Path).then(function (result) {
-                var keyPair = StellarBase.Keypair.fromSecret(result.secretKey);
-                console.log('secretKey : ' + keyPair.secret());
-                console.log('fromSecret:   ' + keyPair.publicKey());
+        return str.getPublicKey_async(bip32Path).then(function (publicKey) {
+            var msg = new Buffer('stellar');
+            return str.sign_async(bip32Path, msg).then(function (signedMsg) {
+              console.log('msg: ' + msg.toString('hex'));
+              console.log('signedMsg: ' + signedMsg.toString('hex'));
+              console.log('publicKey: ' + publicKey.toString('hex'));
+              if (!ed25519.Verify(msg, signedMsg, publicKey)) {
+                console.log('error: invalid signature');
+              }
             });
         });
     });
