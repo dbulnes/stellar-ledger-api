@@ -32,8 +32,8 @@ var TIMEOUT = 10000;
 
 var tests = [
 //    {name: 'testGetAppConfiguration', run: require('./testGetAppConfiguration')},
-//    {name: 'testGetPublicKey', run: require('./testGetPublicKey')},
-    {name: 'testSignSimpleMessage', run: require('./testSignSimpleMessage')}
+    {name: 'testGetPublicKey', run: require('./testGetPublicKey')}
+//    {name: 'testSignSimpleMessage', run: require('./testSignSimpleMessage')}
 ];
 
 function runTests() {

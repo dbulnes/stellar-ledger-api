@@ -26,6 +26,11 @@ function runTest(comm, strLedger, timeout) {
           console.log('rawPublicKey: ' + rawPublicKey.toString('hex'));
           var publicKey = StellarBase.StrKey.encodeEd25519PublicKey(rawPublicKey);
           console.log('publicKey: ' + publicKey);
+          str.getPrivateKey_async(bip32Path).then(function (rawPrivateKey) {
+            var keyPair = StellarBase.Keypair.fromRawEd25519Seed(rawPrivateKey);
+            console.log(keyPair.publicKey());
+            console.log(publicKey == keyPair.publicKey());
+          });
         });
     });
 

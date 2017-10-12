@@ -58,6 +58,25 @@ LedgerStr.prototype.getPublicKey_async = function(path, boolDisplay, boolChainco
 	});
 }
 
+LedgerStr.prototype.getPrivateKey_async = function(path) {
+	var splitPath = utils.splitPath(path);
+	var buffer = new Buffer(5 + 1 + splitPath.length * 4);
+	buffer[0] = 0xe0;
+	buffer[1] = 0x08;
+	buffer[2] = 0x00;
+	buffer[3] = 0x00;
+	buffer[4] = 1 + splitPath.length * 4;
+	buffer[5] = splitPath.length;
+	splitPath.forEach(function (element, index) {
+		buffer.writeUInt32BE(element, 6 + 4 * index);
+	});
+	return this.comm.exchange(buffer.toString('hex'), [0x9000]).then(function(response) {
+		var response = new Buffer(response, 'hex');
+		var secretKeyLength = response[0];
+        return response.slice(1, 1 + secretKeyLength);
+	});
+}
+
 LedgerStr.prototype.sign_async = function(path, rawTx) {
 	var splitPath = utils.splitPath(path);
 	var offset = 0;
