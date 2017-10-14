@@ -115,4 +115,19 @@ LedgerStr.prototype.sign_async = function(path, rawTx) {
 	})
 }
 
+LedgerStr.prototype.testSign_async = function(key, message) {
+    var preamble = new Buffer(5);
+    preamble[0] = 0xe0;
+    preamble[1] = 0x10;
+    preamble[2] = 0x00;
+    preamble[3] = 0x00;
+    preamble[4] = key.length + message.length;
+    var buffer = Buffer.concat([preamble, key, message]);
+    return this.comm.exchange(buffer.toString('hex'), [0x9000]).then(function(response) {
+        var response = new Buffer(response, 'hex');
+        var sigLength = response[0];
+        return response.slice(1, 1 + sigLength);
+    });
+}
+
 module.exports = LedgerStr;
