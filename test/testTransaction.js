@@ -19,7 +19,7 @@ const util = require('util');
 var StellarBase = require('stellar-base');
 var StellarSdk = require('stellar-sdk');
 var server = new StellarSdk.Server('https://horizon.stellar.org/');
-var toPublicKey = "GCKUD4BHIYSAYHU7HBB5FDSW6CSYH3GSOUBPWD2KE7KNBERP4BSKEJDV"
+var destination = "GCKUD4BHIYSAYHU7HBB5FDSW6CSYH3GSOUBPWD2KE7KNBERP4BSKEJDV";
 
 StellarBase.Network.usePublicNetwork();
 
@@ -33,11 +33,12 @@ function runTest(comm, strLedger, timeout) {
           var keyPair = StellarBase.Keypair.fromPublicKey(publicKey);
           return loadAccount(keyPair).then(function (account) {
             var transaction = createTransaction(account);
-            var txHash = transaction.hash();
-            return str.sign_async(bip32Path, txHash).then(function (signedTx) {
-              var signature = createSignature(keyPair, signedTx);
-              transaction.signatures.push(signature);
-              sendTransaction(transaction);
+            var transactionBase = transaction.signatureBase();
+            return str.sign_async(bip32Path, transactionBase).then(function (signedTx) {
+              console.log(signedTx.toString('hex'));
+//              var signature = createSignature(keyPair, signedTx);
+//              transaction.signatures.push(signature);
+//              sendTransaction(transaction);
             });
           });
         });
@@ -51,7 +52,7 @@ function loadAccount(keyPair) {
 function createTransaction(account) {
   return new StellarBase.TransactionBuilder(account)
           .addOperation(StellarBase.Operation.payment({
-                  destination: toPublicKey,
+                  destination: destination,
                   asset: StellarBase.Asset.native(),
                   amount: "1"
               }))

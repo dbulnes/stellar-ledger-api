@@ -77,57 +77,23 @@ LedgerStr.prototype.getPrivateKey_async = function(path) {
 	});
 }
 
-LedgerStr.prototype.sign_async = function(path, rawTx) {
+LedgerStr.prototype.sign_async = function(path, message) {
 	var splitPath = utils.splitPath(path);
-	var offset = 0;
-	var apdus = [];
-	var response = [];
-	var self = this;
-	while (offset != rawTx.length) {
-		var maxChunkSize = (offset == 0 ? (150 - 1 - splitPath.length * 4) : 150)
-		var chunkSize = (offset + maxChunkSize > rawTx.length ? rawTx.length - offset : maxChunkSize);
-		var buffer = new Buffer(offset == 0 ? 5 + 1 + splitPath.length * 4 + chunkSize : 5 + chunkSize);
-		buffer[0] = 0xe0;
-		buffer[1] = 0x04;
-		buffer[2] = (offset == 0 ? 0x00 : 0x80);
-		buffer[3] = 0x00;
-		buffer[4] = (offset == 0 ? 1 + splitPath.length * 4 + chunkSize : chunkSize);
-		if (offset == 0) {
-			buffer[5] = splitPath.length;
-			splitPath.forEach(function (element, index) {
-				buffer.writeUInt32BE(element, 6 + 4 * index);
-			});
-			rawTx.copy(buffer, 6 + 4 * splitPath.length, offset, offset + chunkSize);
-		}
-		else {
-			rawTx.copy(buffer, 5, offset, offset + chunkSize);
-		}
-		apdus.push(buffer.toString('hex'));
-		offset += chunkSize;
-	}
-	return utils.foreach(apdus, function(apdu) {
-		return self.comm.exchange(apdu, [0x9000]).then(function(apduResponse) {
-			response = apduResponse;
-		})
-	}).then(function() {
-		response = new Buffer(response, 'hex');
-        return response.slice(0, response.length - 2);
-	})
-}
-
-LedgerStr.prototype.testSign_async = function(key, message) {
-    var preamble = new Buffer(5);
-    preamble[0] = 0xe0;
-    preamble[1] = 0x10;
-    preamble[2] = 0x00;
-    preamble[3] = 0x00;
-    preamble[4] = key.length + message.length;
-    var buffer = Buffer.concat([preamble, key, message]);
+	var buffer = new Buffer(5 + 1 + splitPath.length * 4);
+	buffer[0] = 0xe0;
+	buffer[1] = 0x04;
+	buffer[2] = 0x00;
+	buffer[3] = 0x00;
+	buffer[4] = 1 + splitPath.length * 4 + message.length;
+	buffer[5] = splitPath.length;
+	splitPath.forEach(function (element, index) {
+		buffer.writeUInt32BE(element, 6 + 4 * index);
+	});
+    buffer = Buffer.concat([buffer, message]);
     return this.comm.exchange(buffer.toString('hex'), [0x9000]).then(function(response) {
-        var response = new Buffer(response, 'hex');
-        var sigLength = response[0];
-        return response.slice(1, 1 + sigLength);
+        return new Buffer(response.slice(0, response.length - 4), 'hex');
     });
 }
+
 
 module.exports = LedgerStr;
