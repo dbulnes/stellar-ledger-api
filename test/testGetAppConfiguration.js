@@ -20,8 +20,10 @@ function runTest(comm, strLedger, timeout) {
     return comm.create_async(timeout, true).then(function (comm) {
         return new strLedger(comm).getAppConfiguration_async().then(function (result) {
             console.log(result);
-        })
-    })
+        }).catch(function (err) {
+            console.log(err);
+        });
+    });
 
 }
 

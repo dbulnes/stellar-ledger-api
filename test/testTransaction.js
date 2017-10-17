@@ -14,8 +14,6 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-const util = require('util');
-
 var StellarBase = require('stellar-base');
 var StellarSdk = require('stellar-sdk');
 var server = new StellarSdk.Server('https://horizon.stellar.org/');
@@ -28,25 +26,22 @@ function runTest(comm, strLedger, timeout) {
     return comm.create_async(timeout, true).then(function (comm) {
         var bip32Path = "44'/148'/0'/0'/0'";
         var str = new strLedger(comm);
-        return str.getPublicKey_async(bip32Path).then(function (rawPublicKey) {
-          var publicKey = StellarBase.StrKey.encodeEd25519PublicKey(rawPublicKey);
-          var keyPair = StellarBase.Keypair.fromPublicKey(publicKey);
-          return loadAccount(keyPair).then(function (account) {
-            var transaction = createTransaction(account);
-            var transactionBase = transaction.signatureBase();
-            return str.sign_async(bip32Path, transactionBase).then(function (signedTx) {
-              console.log(signedTx.toString('hex'));
-//              var signature = createSignature(keyPair, signedTx);
-//              transaction.signatures.push(signature);
-//              sendTransaction(transaction);
+        return str.getPublicKey_async(bip32Path).then(function (result) {
+          var publicKey = result['publicKey'];
+          return loadAccount(publicKey).then(function (account) {
+            var tx = createTransaction(account);
+            // printHexBlocks(signatureBase);
+            return str.signTransaction_async(bip32Path, publicKey, tx).then(function (signedTx) {
+                console.log(signedTx);
+                // sendTransaction(signedTx);
             });
           });
         });
     });
 }
 
-function loadAccount(keyPair) {
-  return server.loadAccount(keyPair.publicKey());
+function loadAccount(publicKey) {
+  return server.loadAccount(publicKey);
 }
 
 function createTransaction(account) {
@@ -57,11 +52,6 @@ function createTransaction(account) {
                   amount: "1"
               }))
           .build();
-}
-
-function createSignature(keyPair, signature) {
-  var hint = keyPair.signatureHint();
-  return new StellarBase.xdr.DecoratedSignature({hint, signature});
 }
 
 function sendTransaction(transaction) {
