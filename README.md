@@ -1,4 +1,4 @@
-NodeJS api for communication with ledger-app-stellar
+Javascript library for communicating with ledger-app-stellar
 
 ## Introduction
 
