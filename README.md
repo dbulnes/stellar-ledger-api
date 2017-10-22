@@ -16,11 +16,11 @@ To build the project run
 
 ## Running the scripts
 
-The ./test directory contains a number of test scripts you can run. Each can be run by invoking
+The `./test` directory contains a number of test scripts you can run. Each can be run by invoking
 
 ```$ npm run script $scriptName```
 
-Where `$scriptName` is the name of script file in the ./test directory minus the .js extension. So, for instance, to run the `testGetPublicKey.js` script run
+Where `$scriptName` is the name of script file in the `./test` directory minus the `.js` extension. So, for instance, to run the `testGetPublicKey.js` script run
 
 ```$ npm run script testGetPublicKey```
 
