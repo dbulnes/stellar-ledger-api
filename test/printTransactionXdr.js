@@ -14,6 +14,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  ********************************************************************************/
+
 var StellarBase = require('stellar-base');
 var StellarSdk = require('stellar-sdk');
 var fs = require('fs');
@@ -35,6 +36,7 @@ function createTransaction(account) {
             asset: StellarBase.Asset.native(),
             amount: "1"
         }))
+        // .addMemo(StellarBase.Memo.id("33"))
         .build();
 }
 
@@ -61,12 +63,20 @@ function toHex (n) {
     return n.toString(16)
 }
 
-loadAccount(publicKey).then(function (account) {
-    var transaction = createTransaction(account);
-    var signatureBase = transaction.signatureBase();
-    printHexBlocks(signatureBase);
-    fs.writeFile("/tmp/txSignatureBase", signatureBase.toString('hex'), function (err) {
-        if (err) console.log("could not write signature base file");
-        else console.log("saved signature base");
+/**
+ * Utility for showing and saving the raw transaction XDR
+ * To be used for developing and testing ledger-app-stellar
+ */
+function printTransactionXdr() {
+    loadAccount(publicKey).then(function (account) {
+        var transaction = createTransaction(account);
+        var signatureBase = transaction.signatureBase();
+        printHexBlocks(signatureBase);
+        fs.writeFile("/tmp/txSignatureBase", signatureBase.toString('hex'), function (err) {
+            if (err) console.log("could not write signature base file");
+            else console.log("saved signature base");
+        });
     });
-});
+}
+
+module.exports = printTransactionXdr;

@@ -16,10 +16,11 @@
 ********************************************************************************/
 var StellarBase = require('stellar-base');
 var StellarSdk = require('stellar-sdk');
-var server = new StellarSdk.Server('https://horizon.stellar.org/');
+
+var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 var destination = "GCKUD4BHIYSAYHU7HBB5FDSW6CSYH3GSOUBPWD2KE7KNBERP4BSKEJDV";
 
-StellarBase.Network.usePublicNetwork();
+StellarBase.Network.useTestNetwork();
 
 function runTest(comm, strLedger, timeout) {
 
@@ -31,9 +32,9 @@ function runTest(comm, strLedger, timeout) {
           return loadAccount(publicKey).then(function (account) {
             var tx = createTransaction(account);
             // printHexBlocks(signatureBase);
-            return str.signTransaction_async(bip32Path, publicKey, tx).then(function (signedTx) {
-                console.log(signedTx);
-                // sendTransaction(signedTx);
+            return str.signTransaction_async(bip32Path, publicKey, tx).then(function (result) {
+                console.log(result);
+                sendTransaction(result['transaction']);
             });
           });
         });
@@ -49,7 +50,7 @@ function createTransaction(account) {
           .addOperation(StellarBase.Operation.payment({
                   destination: destination,
                   asset: StellarBase.Asset.native(),
-                  amount: "1"
+                  amount: "30"
               }))
           .build();
 }

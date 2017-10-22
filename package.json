@@ -4,7 +4,7 @@
   "description": "Javascript API for communication with the Stellar Ledger App",
   "main": "./src/index.js",
   "scripts": {
-    "test": "node test/tests-node.js"
+    "script": "node test/runScript.js"
   },
   "author": "lenondupe@gmail.com",
   "license": "Apache-2.0",
@@ -15,6 +15,7 @@
     "stellar-base": "^0.7.5"
   },
   "devDependencies": {
-    "stellar-sdk": "^0.7.3"
+    "stellar-sdk": "^0.7.3",
+    "request": "^2.83.0"
   }
 }

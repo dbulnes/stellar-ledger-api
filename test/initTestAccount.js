@@ -15,19 +15,32 @@
  *  limitations under the License.
  ********************************************************************************/
 
+var request = require('request');
 var bip32Path = "44'/148'/0'/0'/0'";
-var returnChainCode = true;
 
 /**
- * Print the stellar public key on the Ledger device at {@code bip32Path}
+ * Request a test account from Friendbot for your Ledger-based public key
  */
-function runTest(comm, ledger, timeout) {
+function initTestAccount(comm, ledger, timeout) {
 
     return comm.create_async(timeout, true).then(function (comm) {
         var str = new ledger(comm);
-        str.getPublicKey_async(bip32Path, false, returnChainCode).then(function (result) {
-            console.log('publicKey: ' + result['publicKey']);
-            console.log('chainCode: ' + result['chainCode']);
+        str.getPublicKey_async(bip32Path, false, false).then(function (result) {
+            console.log('requesting test account for publicKey: ' + result['publicKey']);
+            request.get({
+                url: 'https://horizon-testnet.stellar.org/friendbot',
+                qs: { addr: result['publicKey'] },
+                json: true
+            }, function(error, response, body) {
+                if (error || response.statusCode !== 200) {
+                    console.error('ERROR!', error || body);
+                }
+                else {
+                    console.log('SUCCESS! You have a new account :)\n', body);
+                }
+            });
+        }).catch(function (err) {
+            console.log(err);
         }).catch(function (err) {
             console.log(err);
         });
@@ -35,4 +48,4 @@ function runTest(comm, ledger, timeout) {
 
 }
 
-module.exports = runTest;
+module.exports = initTestAccount;

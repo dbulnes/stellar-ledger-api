@@ -80,12 +80,15 @@ LedgerStr.prototype.signTransaction_async = function(path, publicKey, transactio
     });
     buffer = Buffer.concat([buffer, signatureBase]);
     return this.comm.exchange(buffer.toString('hex'), [0x9000]).then(function(response) {
-    	var signedTx = new Buffer(response.slice(0, response.length - 4), 'hex');
+        var result = {};
+        var signature = new Buffer(response.slice(0, response.length - 4), 'hex');
     	var keyPair = StellarBase.Keypair.fromPublicKey(publicKey);
         var hint = keyPair.signatureHint();
-        var signature = new StellarBase.xdr.DecoratedSignature({hint: hint, signature: signedTx});
-        transaction.signatures.push(signature);
-        return transaction;
+        var decorated = new StellarBase.xdr.DecoratedSignature({hint: hint, signature: signature});
+        transaction.signatures.push(decorated);
+        result['transaction'] = transaction;
+        result['signature'] = signature;
+        return result;
     });
 }
 

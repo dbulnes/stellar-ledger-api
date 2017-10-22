@@ -14,25 +14,30 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  ********************************************************************************/
+var StellarSdk = require('stellar-sdk');
 
 var bip32Path = "44'/148'/0'/0'/0'";
-var returnChainCode = true;
+var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
-/**
- * Print the stellar public key on the Ledger device at {@code bip32Path}
- */
-function runTest(comm, ledger, timeout) {
+function initTestAccount(comm, ledger, timeout) {
 
     return comm.create_async(timeout, true).then(function (comm) {
         var str = new ledger(comm);
-        str.getPublicKey_async(bip32Path, false, returnChainCode).then(function (result) {
-            console.log('publicKey: ' + result['publicKey']);
-            console.log('chainCode: ' + result['chainCode']);
+        str.getPublicKey_async(bip32Path, false, false).then(function (result) {
+            console.log('showing account details for publicKey: ' + result['publicKey']);
+            server.loadAccount(result['publicKey']).then(function(account) {
+                console.log('Account details for: ' + result['publicKey']);
+                console.log(account);
+                // account.balances.forEach(function(balance) {
+                //     console.log('Type:', balance.asset_type, ', Balance:', balance.balance);
+                // });
+            });
+        }).catch(function (err) {
+            console.log(err);
         }).catch(function (err) {
             console.log(err);
         });
     });
-
 }
 
-module.exports = runTest;
+module.exports = initTestAccount;
