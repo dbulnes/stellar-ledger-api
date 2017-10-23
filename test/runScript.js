@@ -19,7 +19,7 @@ var comm = require('ledgerco').comm_node;
 var ledger = require('../src');
 var Q = require('q');
 
-var TIMEOUT = 15000;
+var TIMEOUT = 120000;
 
 var nodeCmdArgs = process.argv.slice(2);
 var scriptName = nodeCmdArgs[0];
