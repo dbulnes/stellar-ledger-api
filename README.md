@@ -8,7 +8,7 @@ It is currently work in progress. In order to run the tests you must have the [L
 
 ## Building
 
-In order to build this project and run the tests you must have [NodeJS](https://nodejs.org/en/) and [NPM](https://www.npmjs.com/) installed. Note that usually, when you install NodeJS from a package, NPM is also installed, so you should be fine with just installing the former.
+To build this project and run the tests you must have [NodeJS](https://nodejs.org/en/) and [NPM](https://www.npmjs.com/) installed. Note that usually, when you install NodeJS from a package, NPM is also installed, so you should be fine with just installing the former.
 
 To build the project run
 
