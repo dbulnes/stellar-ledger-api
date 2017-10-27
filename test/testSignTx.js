@@ -52,7 +52,7 @@ function createTransaction(account) {
           .addOperation(StellarBase.Operation.payment({
                   destination: destination,
                   asset: StellarBase.Asset.native(),
-                  amount: "30000"
+                  amount: "30"
               }))
           .build();
 }

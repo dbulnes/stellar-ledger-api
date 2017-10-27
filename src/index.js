@@ -108,5 +108,32 @@ LedgerStr.prototype.signTx_async = function(path, publicKey, transaction) {
     });
 };
 
+LedgerStr.prototype.signTxHash_async = function(path, publicKey, transaction) {
+	var txHash = transaction.hash();
+    var splitPath = utils.splitPath(path);
+    var buffer = new Buffer(5 + 1 + splitPath.length * 4);
+    buffer[0] = 0xe0;
+    buffer[1] = 0x08;
+    buffer[2] = 0x00;
+    buffer[3] = 0x00;
+    buffer[4] = 1 + splitPath.length * 4 + txHash.length;
+    buffer[5] = splitPath.length;
+    splitPath.forEach(function (element, index) {
+        buffer.writeUInt32BE(element, 6 + 4 * index);
+    });
+    buffer = Buffer.concat([buffer, txHash]);
+    return this.comm.exchange(buffer.toString('hex'), [0x9000]).then(function(response) {
+        var result = {};
+        var signature = new Buffer(response.slice(0, response.length - 4), 'hex');
+    	var keyPair = StellarBase.Keypair.fromPublicKey(publicKey);
+        var hint = keyPair.signatureHint();
+        var decorated = new StellarBase.xdr.DecoratedSignature({hint: hint, signature: signature});
+        transaction.signatures.push(decorated);
+        result['transaction'] = transaction;
+        result['signature'] = signature;
+        return result;
+    });
+};
+
 
 module.exports = LedgerStr;
