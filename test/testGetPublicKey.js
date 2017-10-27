@@ -16,6 +16,7 @@
  ********************************************************************************/
 
 var bip32Path = "44'/148'/0'/0'/0'";
+var returnSignature = true;
 var returnChainCode = true;
 
 /**
@@ -25,8 +26,9 @@ function runTest(comm, ledger, timeout) {
 
     return comm.create_async(timeout, true).then(function (comm) {
         var str = new ledger(comm);
-        str.getPublicKey_async(bip32Path, false, returnChainCode).then(function (result) {
+        str.getPublicKey_async(bip32Path, returnSignature, returnChainCode).then(function (result) {
             console.log('publicKey: ' + result['publicKey']);
+            console.log('signature: ' + result['signature']);
             console.log('chainCode: ' + result['chainCode']);
         }).catch(function (err) {
             console.log(err);

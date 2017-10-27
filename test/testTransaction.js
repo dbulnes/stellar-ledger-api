@@ -32,9 +32,11 @@ function runTest(comm, strLedger, timeout) {
           return loadAccount(publicKey).then(function (account) {
             var tx = createTransaction(account);
             // printHexBlocks(signatureBase);
-            return str.signTransaction_async(bip32Path, publicKey, tx).then(function (result) {
-                console.log(result);
-                sendTransaction(result['transaction']);
+            return str.signTx_async(bip32Path, publicKey, tx).then(function (result) {
+                console.log('signing transaction successful');
+                // sendTransaction(result['transaction']);
+            }).catch(function (err) {
+                console.log('signing transaction failed: ' + err);
             });
           });
         });
@@ -50,7 +52,7 @@ function createTransaction(account) {
           .addOperation(StellarBase.Operation.payment({
                   destination: destination,
                   asset: StellarBase.Asset.native(),
-                  amount: "30"
+                  amount: "30000"
               }))
           .build();
 }
