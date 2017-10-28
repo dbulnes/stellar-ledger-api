@@ -95,16 +95,25 @@ LedgerStr.prototype.signTx_async = function(path, publicKey, transaction) {
         buffer.writeUInt32BE(element, 6 + 4 * index);
     });
     buffer = Buffer.concat([buffer, signatureBase]);
-    return this.comm.exchange(buffer.toString('hex'), [0x9000]).then(function(response) {
-        var result = {};
-        var signature = new Buffer(response.slice(0, response.length - 4), 'hex');
-    	var keyPair = StellarBase.Keypair.fromPublicKey(publicKey);
-        var hint = keyPair.signatureHint();
-        var decorated = new StellarBase.xdr.DecoratedSignature({hint: hint, signature: signature});
-        transaction.signatures.push(decorated);
-        result['transaction'] = transaction;
-        result['signature'] = signature;
-        return result;
+    if (buffer.length > 255) {
+        var msg = 'Transaction too large. Allowed: 255; actual: ' + buffer.length;
+        throw new Error(msg);
+    }
+    return this.comm.exchange(buffer.toString('hex'), [0x9000, 0x6985]).then(function(response) {
+        var status = response.slice(response.length - 4);
+        if (status == 9000) {
+            var result = {};
+            var signature = new Buffer(response.slice(0, response.length - 4), 'hex');
+            var keyPair = StellarBase.Keypair.fromPublicKey(publicKey);
+            var hint = keyPair.signatureHint();
+            var decorated = new StellarBase.xdr.DecoratedSignature({hint: hint, signature: signature});
+            transaction.signatures.push(decorated);
+            result['transaction'] = transaction;
+            result['signature'] = signature;
+            return result;
+        } else {
+            throw new Error('Approval request rejected');
+        }
     });
 };
 
@@ -122,16 +131,21 @@ LedgerStr.prototype.signTxHash_async = function(path, publicKey, transaction) {
         buffer.writeUInt32BE(element, 6 + 4 * index);
     });
     buffer = Buffer.concat([buffer, txHash]);
-    return this.comm.exchange(buffer.toString('hex'), [0x9000]).then(function(response) {
-        var result = {};
-        var signature = new Buffer(response.slice(0, response.length - 4), 'hex');
-    	var keyPair = StellarBase.Keypair.fromPublicKey(publicKey);
-        var hint = keyPair.signatureHint();
-        var decorated = new StellarBase.xdr.DecoratedSignature({hint: hint, signature: signature});
-        transaction.signatures.push(decorated);
-        result['transaction'] = transaction;
-        result['signature'] = signature;
-        return result;
+    return this.comm.exchange(buffer.toString('hex'), [0x9000, 0x6985]).then(function(response) {
+        var status = response.slice(response.length - 4);
+        if (status == 9000) {
+            var result = {};
+            var signature = new Buffer(response.slice(0, response.length - 4), 'hex');
+            var keyPair = StellarBase.Keypair.fromPublicKey(publicKey);
+            var hint = keyPair.signatureHint();
+            var decorated = new StellarBase.xdr.DecoratedSignature({hint: hint, signature: signature});
+            transaction.signatures.push(decorated);
+            result['transaction'] = transaction;
+            result['signature'] = signature;
+            return result;
+        } else {
+            throw new Error('Approval request rejected');
+        }
     });
 };
 

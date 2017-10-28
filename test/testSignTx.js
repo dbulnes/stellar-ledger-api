@@ -18,6 +18,7 @@ var StellarBase = require('stellar-base');
 var StellarSdk = require('stellar-sdk');
 
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
+var source = "GCU5JAIOSF4HLRYMIDKWGWPSTFPXOKJUIUK53GQORF5GSK36PSI3OKCI";
 var destination = "GCKUD4BHIYSAYHU7HBB5FDSW6CSYH3GSOUBPWD2KE7KNBERP4BSKEJDV";
 
 StellarBase.Network.useTestNetwork();
@@ -31,12 +32,11 @@ function runTest(comm, strLedger, timeout) {
           var publicKey = result['publicKey'];
           return loadAccount(publicKey).then(function (account) {
             var tx = createTransaction(account);
-            // printHexBlocks(signatureBase);
             return str.signTx_async(bip32Path, publicKey, tx).then(function (result) {
-                console.log('signing transaction successful');
-                // sendTransaction(result['transaction']);
+                console.log(result);
+                // TODO: verify signature
             }).catch(function (err) {
-                console.log('signing transaction failed: ' + err);
+                console.error(err);
             });
           });
         });
@@ -48,23 +48,14 @@ function loadAccount(publicKey) {
 }
 
 function createTransaction(account) {
+  var asset = new StellarBase.Asset("DUPE", source);
   return new StellarBase.TransactionBuilder(account)
           .addOperation(StellarBase.Operation.payment({
                   destination: destination,
-                  asset: StellarBase.Asset.native(),
+                  asset: asset,
                   amount: "30"
               }))
           .build();
-}
-
-function sendTransaction(transaction) {
-  server.submitTransaction(transaction)
-    .then(function (transactionResult) {
-        console.log(transactionResult);
-    })
-    .catch(function (err) {
-        console.error(err);
-    });
 }
 
 module.exports = runTest;
