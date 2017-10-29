@@ -15,23 +15,35 @@
 *  limitations under the License.
 ********************************************************************************/
 
-var comm = require('ledgerco').comm_node;
-var ledger = require('../src');
+var browser = (typeof window !== 'undefined');
+
+if (!browser) {
+    sledger = require('../src');
+}
 var Q = require('q');
 
 var TIMEOUT = 120000;
 
-var nodeCmdArgs = process.argv.slice(2);
-var scriptName = nodeCmdArgs[0];
+var scripts = {
+    testGetAppConfiguration: require('./testGetAppConfiguration'),
+    testGetPublicKey: require('./testGetPublicKey'),
+    testSignTx: require('./testSignTx'),
+    testSignTxHash: require('./testSignTxHash')
+};
 
 function runScript(scriptName) {
-    var script = require('./' + scriptName);
     console.log('running: ' + scriptName);
     Q.resolve().then(function () {
-        return script(comm, ledger, TIMEOUT);
+        return scripts[scriptName](sledger.comm, sledger.api, TIMEOUT);
     }).fail(function (err) {
         console.error("failure: " + err);
     });
 }
 
-runScript(scriptName);
+if (!browser) {
+    var nodeCmdArgs = process.argv.slice(2);
+    var scriptName = nodeCmdArgs[0];
+    runScript(scriptName);
+}
+
+module.exports = runScript;

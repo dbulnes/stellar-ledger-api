@@ -28,14 +28,29 @@ where `$scriptName` is the name of script file in the `./test` directory minus t
 
 If the test succeeds you will see your public key printed on the console.
 
-**Note: you must have your device connected and the Stellar app open**
+**Note: make sure the Stellar app is open**
 
-### Creating a test account
+## Browser support
 
-Before you can run some of the scripts, an account for your Ledger-based keys must exist on the Stellar test network. To initialize your Ledger-based account on this network you can run the 'initTestAccount` script.
+The ledger stellar app supports communication over u2f and so does this javascript library. Browsers that support u2f are Google Chrome version 38+ and Opera version 40+.
 
-```$ npm run script initTestAccount```
+First browserify the library:
 
-And to inspect the account details:
+```$ npm run browserify```
 
-```$ npm run script showAccount```
+This will generate the file `./browser/sledger.js` that contains everything you need to connect with the browser.
+
+To generate a minified version run:
+
+```$ npm run uglify```
+
+The tests can also be run in the browser. `./test/runScript.js` must be browserified first:
+
+```$ npm run browserify-test```
+
+Chrome only opens u2f channels if the page is served over https. Follow the instructions [here](https://gist.github.com/dergachev/7028596) to fire up a simple https server with python.
+
+You must also enable browser support in the Stellar app settings.
+
+Then open https://localhost:4443/test/index.html and run the tests
+ 

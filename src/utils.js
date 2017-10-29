@@ -17,8 +17,6 @@
 'use strict';
 
 var Q = require('q');
-var crc = require('crc');
-var base32 = require('base32.js');
 
 var SledgerUtils = {}
 

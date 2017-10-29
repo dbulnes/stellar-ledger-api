@@ -1,3 +1,12 @@
 node_modules
 .idea
 package-lock.json
+npm-debug.log
+xdr_summary
+ledger-js-api
+js-stellar-sdk
+server.pem
+test/sendTransaction.js
+test/runScript-browser.js
+browser/sledger.js
+browser/sledger.min.js

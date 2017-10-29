@@ -14,13 +14,13 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  ********************************************************************************/
-var StellarBase = require('stellar-base');
+// var StellarBase = require('stellar-base');
 var StellarSdk = require('stellar-sdk');
 
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 var destination = "GCKUD4BHIYSAYHU7HBB5FDSW6CSYH3GSOUBPWD2KE7KNBERP4BSKEJDV";
 
-StellarBase.Network.useTestNetwork();
+StellarSdk.Network.useTestNetwork();
 
 function runTest(comm, strLedger, timeout) {
 
@@ -32,7 +32,13 @@ function runTest(comm, strLedger, timeout) {
             return loadAccount(publicKey).then(function (account) {
                 var tx = createTransaction(account);
                 return str.signTxHash_async(bip32Path, publicKey, tx).then(function (result) {
-                    console.log(result);
+                    var txHash = tx.hash();
+                    var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
+                    if (keyPair.verify(txHash, result['signature'])) {
+                        console.log('Success! Good signature');
+                    } else {
+                        console.error('Failure: Bad signature');
+                    }
                 }).catch(function (err) {
                     console.error(err);
                 });
@@ -46,10 +52,10 @@ function loadAccount(publicKey) {
 }
 
 function createTransaction(account) {
-    return new StellarBase.TransactionBuilder(account)
-        .addOperation(StellarBase.Operation.payment({
+    return new StellarSdk.TransactionBuilder(account)
+        .addOperation(StellarSdk.Operation.payment({
             destination: destination,
-            asset: StellarBase.Asset.native(),
+            asset: StellarSdk.Asset.native(),
             amount: "30"
         }))
         .build();
