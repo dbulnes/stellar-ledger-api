@@ -2,8 +2,21 @@
 <head>
     <script src="../browser/sledger.js"></script>
     <script src="runScript-browser.js"></script>
+    <script>
+        function run() {
+            var select = document.getElementById('script');
+            var script = select.options[select.selectedIndex].text;
+            runScript(script);
+        }
+    </script>
 </head>
 <body>
-<button type="button" onClick="runScript('testGetAppConfiguration')">run test</button>
+<select id="script">
+    <option>testGetAppConfiguration</option>
+    <option>testGetPublicKey</option>
+    <option>testSignTx</option>
+    <option>testSignTxHash</option>
+</select>
+<button type="button" onClick="run()">run script</button>
 </body>
 </html>

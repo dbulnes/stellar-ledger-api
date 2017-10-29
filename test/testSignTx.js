@@ -55,7 +55,7 @@ function createTransaction(account) {
   return new StellarSdk.TransactionBuilder(account)
           .addOperation(StellarSdk.Operation.payment({
                   destination: destination,
-                  asset: asset,
+                  asset: StellarSdk.Asset.native(),
                   amount: "30"
               }))
           .build();
