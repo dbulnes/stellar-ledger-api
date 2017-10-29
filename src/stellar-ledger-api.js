@@ -22,7 +22,7 @@ var StellarSdk = require('stellar-sdk');
 
 var Sledger = function(comm) {
     this.comm = comm;
-    this.comm.setScrambleKey('s7r');
+    this.comm.setScrambleKey('l0v');
 };
 
 Sledger.prototype.getAppConfiguration_async = function() {
