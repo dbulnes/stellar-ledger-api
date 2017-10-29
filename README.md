@@ -38,13 +38,13 @@ First browserify the library:
 
 ```$ npm run browserify```
 
-This will generate the file `./browser/sledger.js` that contains everything you need to connect with the browser.
+This will generate the file `./browser/sledger.js` that contains everything you need to connect with the app in the browser.
 
 To generate a minified version run:
 
 ```$ npm run uglify```
 
-The tests can also be run in the browser. `./test/runScript.js` must be browserified first:
+The tests can also be run in the browser. To do this the tests must be browserified first:
 
 ```$ npm run browserify-test```
 
@@ -52,5 +52,4 @@ Chrome only opens u2f channels if the page is served over https. Follow the inst
 
 You must also enable browser support in the Stellar app settings.
 
-Then open https://localhost:4443/test/index.html and run the tests
- 
+Then open https://localhost:4443/test/index.html to run the tests
