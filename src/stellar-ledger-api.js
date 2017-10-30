@@ -20,6 +20,12 @@
 var utils = require('./utils');
 var StellarSdk = require('stellar-sdk');
 
+const APDU_MAX_SIZE = 255;
+const P1_FIRST_APDU = 0x00;
+const P1_MORE_APDU = 0x80;
+const P2_LAST_APDU = 0x00;
+const P2_MORE_APDU = 0x80;
+
 var Sledger = function(comm) {
     this.comm = comm;
     this.comm.setScrambleKey('l0v');
@@ -82,25 +88,63 @@ Sledger.prototype.getPublicKey_async = function(path, validateKeypair, returnCha
 };
 
 Sledger.prototype.signTx_async = function(path, publicKey, transaction) {
+
     validateIsSinglePaymentTx(transaction);
     var signatureBase = transaction.signatureBase();
+
+    var apdus = [];
+    var self = this;
+    var response;
+
     var splitPath = utils.splitPath(path);
-    var buffer = new Buffer(5 + 1 + splitPath.length * 4);
+    var bufferSize = 5 + 1 + splitPath.length * 4;
+    var buffer = new Buffer(bufferSize);
     buffer[0] = 0xe0;
     buffer[1] = 0x04;
-    buffer[2] = 0x00;
-    buffer[3] = 0x00;
-    buffer[4] = 1 + splitPath.length * 4 + signatureBase.length;
+    buffer[2] = P1_FIRST_APDU;
     buffer[5] = splitPath.length;
     splitPath.forEach(function (element, index) {
         buffer.writeUInt32BE(element, 6 + 4 * index);
     });
-    buffer = Buffer.concat([buffer, signatureBase]);
-    if (buffer.length > 255) {
-        var msg = 'Transaction too large. Allowed: 255; actual: ' + buffer.length;
-        throw new Error(msg);
+
+    var chunkSize = APDU_MAX_SIZE - bufferSize;
+    if (signatureBase.length <= chunkSize) {
+        buffer[3] = P2_LAST_APDU;
+        buffer[4] = 1 + splitPath.length * 4 + signatureBase.length;
+        buffer = Buffer.concat([buffer, signatureBase]);
+        apdus.push(buffer.toString('hex'));
+    } else {
+        buffer[3] = P2_MORE_APDU;
+        buffer[4] = 1 + splitPath.length * 4 + chunkSize;
+        // assert.equal(APDU_MAX_SIZE, buffer[4], 'Expected max apdu size, was: ' + buffer[4]);
+        var chunk = new Buffer(chunkSize);
+        var offset = 0;
+        signatureBase.copy(chunk, 0, offset, chunkSize);
+        buffer = Buffer.concat([buffer, chunk]);
+        apdus.push(buffer.toString('hex'));
+        offset += chunkSize;
+        while (offset < signatureBase.length) {
+            var remaining = signatureBase.length - offset;
+            var available = APDU_MAX_SIZE - 5;
+            chunkSize = remaining < available ? remaining : available;
+            chunk = new Buffer(chunkSize);
+            signatureBase.copy(chunk, 0, offset, offset + chunkSize);
+            offset += chunkSize;
+            buffer = new Buffer(5);
+            buffer[0] = 0xe0;
+            buffer[1] = 0x04;
+            buffer[2] = P1_MORE_APDU;
+            buffer[3] = offset < signatureBase.length ? P2_MORE_APDU : P2_LAST_APDU;
+            buffer[4] = chunkSize;
+            buffer = Buffer.concat([buffer, chunk]);
+            apdus.push(buffer.toString('hex'));
+        }
     }
-    return this.comm.exchange(buffer.toString('hex'), [0x9000, 0x6985]).then(function(response) {
+    return utils.foreach(apdus, function(apdu) {
+        return self.comm.exchange(apdu, [0x9000, 0x6985]).then(function(nextResponse) {
+            response = nextResponse;
+        });
+    }).then(function() {
         var status = response.slice(response.length - 4).toString('hex');
         if (status === '9000') {
             var result = {};

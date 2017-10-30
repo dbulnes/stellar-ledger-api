@@ -30,7 +30,7 @@ function runTest(comm, api, timeout) {
         return str.getPublicKey_async(bip32Path).then(function (result) {
           var publicKey = result['publicKey'];
           return loadAccount(publicKey).then(function (account) {
-            var tx = createTransaction(account);
+            var tx = createTransaction(account, publicKey);
             return str.signTx_async(bip32Path, publicKey, tx).then(function (result) {
                 var txHash = tx.hash();
                 var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
@@ -51,13 +51,21 @@ function loadAccount(publicKey) {
   return server.loadAccount(publicKey);
 }
 
-function createTransaction(account) {
-  return new StellarSdk.TransactionBuilder(account)
+function createTransaction(account, publicKey) {
+    var asset = new StellarSdk.Asset("DUPE", publicKey);
+    var opts = {
+        timebounds: {
+            minTime: 50,
+            maxTime: 100
+        }
+    };
+  return new StellarSdk.TransactionBuilder(account, opts)
           .addOperation(StellarSdk.Operation.payment({
+                  source: publicKey,
                   destination: destination,
-                  asset: StellarSdk.Asset.native(),
+                  asset: asset,
                   amount: "30"
-              }))
+              })).addMemo(StellarSdk.Memo.text("starlight"))
           .build();
 }
 
