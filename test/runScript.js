@@ -28,7 +28,8 @@ var scripts = {
     testGetAppConfiguration: require('./testGetAppConfiguration'),
     testGetPublicKey: require('./testGetPublicKey'),
     testSignTx: require('./testSignTx'),
-    testSignTxHash: require('./testSignTxHash')
+    testSignTxHash: require('./testSignTxHash'),
+    printTransactionXdr: require('./printTransactionXdr')
 };
 
 function runScript(scriptName) {

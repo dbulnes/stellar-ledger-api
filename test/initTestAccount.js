@@ -21,10 +21,10 @@ var bip32Path = "44'/148'/0'/0'/0'";
 /**
  * Request a test account from Friendbot for your Ledger-based public key
  */
-function initTestAccount(comm, ledger, timeout) {
+function initTestAccount(comm, api, timeout) {
 
     return comm.create_async(timeout, true).then(function (comm) {
-        var str = new ledger(comm);
+        var str = new api(comm);
         str.getPublicKey_async(bip32Path, false, false).then(function (result) {
             console.log('requesting test account for publicKey: ' + result['publicKey']);
             request.get({

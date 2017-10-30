@@ -3,7 +3,7 @@
     <script src="../browser/sledger.js"></script>
     <script src="runScript-browser.js"></script>
     <script>
-        function run() {
+        function selectAndRun() {
             var select = document.getElementById('script');
             var script = select.options[select.selectedIndex].text;
             runScript(script);
@@ -17,6 +17,6 @@
     <option>testSignTx</option>
     <option>testSignTxHash</option>
 </select>
-<button type="button" onClick="run()">run script</button>
+<button type="button" onClick="selectAndRun()">run script</button>
 </body>
 </html>

@@ -19,18 +19,15 @@ var StellarSdk = require('stellar-sdk');
 var bip32Path = "44'/148'/0'/0'/0'";
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
-function initTestAccount(comm, ledger, timeout) {
+function showAccount(comm, api, timeout) {
 
     return comm.create_async(timeout, true).then(function (comm) {
-        var str = new ledger(comm);
+        var str = new api(comm);
         str.getPublicKey_async(bip32Path, false, false).then(function (result) {
             console.log('showing account details for publicKey: ' + result['publicKey']);
             server.loadAccount(result['publicKey']).then(function(account) {
                 console.log('Account details for: ' + result['publicKey']);
                 console.log(account);
-                // account.balances.forEach(function(balance) {
-                //     console.log('Type:', balance.asset_type, ', Balance:', balance.balance);
-                // });
             });
         }).catch(function (err) {
             console.log(err);
@@ -40,4 +37,4 @@ function initTestAccount(comm, ledger, timeout) {
     });
 }
 
-module.exports = initTestAccount;
+module.exports = showAccount;

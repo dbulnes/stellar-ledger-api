@@ -71,7 +71,7 @@ Sledger.prototype.getPublicKey_async = function(path, validateKeypair, returnCha
             result['signature'] = signature.toString('hex');
             var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
             if (!keyPair.verify(verifyMsg, signature)) {
-                throw new Error('bad signature');
+                throw new Error('Bad signature. Keypair is invalid. Please report this.');
             }
         }
         if (returnChainCode) {
@@ -83,7 +83,8 @@ Sledger.prototype.getPublicKey_async = function(path, validateKeypair, returnCha
 };
 
 Sledger.prototype.signTx_async = function(path, publicKey, transaction) {
-	var signatureBase = transaction.signatureBase();
+    validateIsSinglePaymentTx(transaction);
+    var signatureBase = transaction.signatureBase();
     var splitPath = utils.splitPath(path);
     var buffer = new Buffer(5 + 1 + splitPath.length * 4);
     buffer[0] = 0xe0;
@@ -105,10 +106,7 @@ Sledger.prototype.signTx_async = function(path, publicKey, transaction) {
         if (status === '9000') {
             var result = {};
             var signature = new Buffer(response.slice(0, response.length - 4), 'hex');
-            var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
-            var hint = keyPair.signatureHint();
-            var decorated = new StellarSdk.xdr.DecoratedSignature({hint: hint, signature: signature});
-            transaction.signatures.push(decorated);
+            addSignatureToTx(transaction, publicKey, signature);
             result['transaction'] = transaction;
             result['signature'] = signature;
             return result;
@@ -137,10 +135,7 @@ Sledger.prototype.signTxHash_async = function(path, publicKey, transaction) {
         if (status === '9000') {
             var result = {};
             var signature = new Buffer(response.slice(0, response.length - 4), 'hex');
-            var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
-            var hint = keyPair.signatureHint();
-            var decorated = new StellarSdk.xdr.DecoratedSignature({hint: hint, signature: signature});
-            transaction.signatures.push(decorated);
+            addSignatureToTx(transaction, publicKey, signature);
             result['transaction'] = transaction;
             result['signature'] = signature;
             return result;
@@ -150,5 +145,23 @@ Sledger.prototype.signTxHash_async = function(path, publicKey, transaction) {
     });
 };
 
+function validateIsSinglePaymentTx(transaction) {
+    if (transaction.operations.length > 1) {
+        throw new Error('Method signTx_async only allows a single payment operation per transaction.' +
+            ' Use signTxHash_async for this type of transaction');
+    }
+    var operation = transaction.operations[0];
+    if (operation.type !== 'payment') {
+        throw new Error('Method signTx_async only allows operations of type \'payment\'.' +
+            ' Found: ' + operation.type + '. Use signTxHash_async for this type of transaction');
+    }
+}
+
+function addSignatureToTx(transaction, publicKey, signature) {
+    var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
+    var hint = keyPair.signatureHint();
+    var decorated = new StellarSdk.xdr.DecoratedSignature({hint: hint, signature: signature});
+    transaction.signatures.push(decorated);
+}
 
 module.exports = Sledger;
