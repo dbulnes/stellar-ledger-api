@@ -28,7 +28,6 @@ function runTest(comm, api, timeout) {
         var str = new api(comm);
         str.getPublicKey_async(bip32Path, returnSignature, returnChainCode).then(function (result) {
             console.log('publicKey: ' + result['publicKey']);
-            console.log('signature: ' + result['signature']);
             console.log('chainCode: ' + result['chainCode']);
         }).catch(function (err) {
             console.log(err);

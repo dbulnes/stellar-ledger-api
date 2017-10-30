@@ -1,6 +1,6 @@
 /********************************************************************************
 *   Ledger Node JS API
-*   (c) 2016-2017 Ledger
+*   (c) 2017 LeNonDupe
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -17,7 +17,13 @@
 
 var sledger = module.exports;
 
-sledger.comm = require('ledgerco').comm_node;
+var ledger = require('ledgerco');
+var isNode = (typeof window === 'undefined');
+if (isNode) {
+    sledger.comm = ledger.comm_node;
+} else {
+    sledger.comm = ledger.comm_u2f;
+}
 sledger.api = require('./stellar-ledger-api');
 
 module.exports = sledger;

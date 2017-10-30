@@ -68,7 +68,6 @@ Sledger.prototype.getPublicKey_async = function(path, validateKeypair, returnCha
             var signatureLength = response[offset++];
             var signature = response.slice(offset, offset + signatureLength);
             offset += signatureLength;
-            result['signature'] = signature.toString('hex');
             var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
             if (!keyPair.verify(verifyMsg, signature)) {
                 throw new Error('Bad signature. Keypair is invalid. Please report this.');

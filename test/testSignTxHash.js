@@ -14,7 +14,6 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  ********************************************************************************/
-// var StellarBase = require('stellar-base');
 var StellarSdk = require('stellar-sdk');
 
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');

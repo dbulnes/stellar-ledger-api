@@ -15,28 +15,32 @@
  *  limitations under the License.
  ********************************************************************************/
 
-var StellarBase = require('stellar-base');
 var StellarSdk = require('stellar-sdk');
 var fs = require('fs');
 
-StellarBase.Network.usePublicNetwork();
+StellarSdk.Network.usePublicNetwork();
 var server = new StellarSdk.Server('https://horizon.stellar.org/');
 var destination = "GCKUD4BHIYSAYHU7HBB5FDSW6CSYH3GSOUBPWD2KE7KNBERP4BSKEJDV";
 var publicKey = "GAQNVGMLOXSCWH37QXIHLQJH6WZENXYSVWLPAEF4673W64VRNZLRHMFM";
-
 
 function loadAccount(publicKey) {
     return server.loadAccount(publicKey);
 }
 
 function createTransaction(account) {
-    return new StellarBase.TransactionBuilder(account)
-        .addOperation(StellarBase.Operation.payment({
+    var opts = {
+        timebounds: {
+            minTime: 50,
+            maxTime: 100
+        }
+    };
+    return new StellarSdk.TransactionBuilder(account, opts)
+        .addOperation(StellarSdk.Operation.payment({
             destination: destination,
-            asset: StellarBase.Asset.native(),
+            asset: StellarSdk.Asset.native(),
             amount: "1"
         }))
-        // .addMemo(StellarBase.Memo.id("33"))
+        .addMemo(StellarSdk.Memo.id("33"))
         .build();
 }
 

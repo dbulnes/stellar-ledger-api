@@ -29,7 +29,9 @@ var scripts = {
     testGetPublicKey: require('./testGetPublicKey'),
     testSignTx: require('./testSignTx'),
     testSignTxHash: require('./testSignTxHash'),
-    printTransactionXdr: require('./printTransactionXdr')
+    printTransactionXdr: require('./printTransactionXdr'),
+    showAccount: require('./showAccount'),
+    initTestAccount: require('./initTestAccount')
 };
 
 function runScript(scriptName) {
