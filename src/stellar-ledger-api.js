@@ -20,23 +20,27 @@
 var utils = require('./utils');
 var StellarSdk = require('stellar-sdk');
 
+const CLA = 0xe0;
+const INS_GET_PK = 0x02;
+const INS_SIGN_TX = 0x04;
+const INS_GET_CONF = 0x06;
+const INS_SIGN_TX_HASH = 0x08;
+
 const APDU_MAX_SIZE = 255;
 const P1_FIRST_APDU = 0x00;
 const P1_MORE_APDU = 0x80;
 const P2_LAST_APDU = 0x00;
 const P2_MORE_APDU = 0x80;
 
-// TODO: check bip 32 path is a stellar path and with only hardened elements
-
-var Sledger = function(comm) {
+var StellarLedgerApi = function(comm) {
     this.comm = comm;
     this.comm.setScrambleKey('l0v');
 };
 
-Sledger.prototype.getAppConfiguration_async = function() {
+StellarLedgerApi.prototype.getAppConfiguration_async = function() {
     var buffer = new Buffer(5);
-    buffer[0] = 0xe0;
-    buffer[1] = 0x06;
+    buffer[0] = CLA;
+    buffer[1] = INS_GET_CONF;
     buffer[2] = 0x00;
     buffer[3] = 0x00;
     buffer[4] = 0x00;
@@ -48,11 +52,12 @@ Sledger.prototype.getAppConfiguration_async = function() {
     });
 };
 
-Sledger.prototype.getPublicKey_async = function(path, validateKeypair, returnChainCode) {
+StellarLedgerApi.prototype.getPublicKey_async = function(path, validateKeypair, returnChainCode) {
+    checkStellarBip32Path(path);
     var splitPath = utils.splitPath(path);
     var buffer = new Buffer(5 + 1 + splitPath.length * 4);
-    buffer[0] = 0xe0;
-    buffer[1] = 0x02;
+    buffer[0] = CLA;
+    buffer[1] = INS_GET_PK;
     buffer[2] = (validateKeypair ? 0x01 : 0x00);
     buffer[3] = (returnChainCode ? 0x01 : 0x00);
     buffer[4] = 1 + splitPath.length * 4;
@@ -85,9 +90,10 @@ Sledger.prototype.getPublicKey_async = function(path, validateKeypair, returnCha
     });
 };
 
-Sledger.prototype.signTx_async = function(path, publicKey, transaction) {
+StellarLedgerApi.prototype.signTx_async = function(path, publicKey, transaction) {
+    checkStellarBip32Path(path);
+    validateIsSingleStellarPaymentTx(transaction);
 
-    validateIsSinglePaymentTx(transaction);
     var signatureBase = transaction.signatureBase();
 
     var apdus = [];
@@ -97,8 +103,8 @@ Sledger.prototype.signTx_async = function(path, publicKey, transaction) {
     var splitPath = utils.splitPath(path);
     var bufferSize = 5 + 1 + splitPath.length * 4;
     var buffer = new Buffer(bufferSize);
-    buffer[0] = 0xe0;
-    buffer[1] = 0x04;
+    buffer[0] = CLA;
+    buffer[1] = INS_SIGN_TX;
     buffer[2] = P1_FIRST_APDU;
     buffer[5] = splitPath.length;
     splitPath.forEach(function (element, index) {
@@ -129,8 +135,8 @@ Sledger.prototype.signTx_async = function(path, publicKey, transaction) {
             signatureBase.copy(chunk, 0, offset, offset + chunkSize);
             offset += chunkSize;
             buffer = new Buffer(5);
-            buffer[0] = 0xe0;
-            buffer[1] = 0x04;
+            buffer[0] = CLA;
+            buffer[1] = INS_SIGN_TX;
             buffer[2] = P1_MORE_APDU;
             buffer[3] = offset < signatureBase.length ? P2_MORE_APDU : P2_LAST_APDU;
             buffer[4] = chunkSize;
@@ -147,7 +153,7 @@ Sledger.prototype.signTx_async = function(path, publicKey, transaction) {
         if (status === '9000') {
             var result = {};
             var signature = new Buffer(response.slice(0, response.length - 4), 'hex');
-            addSignatureToTx(transaction, publicKey, signature);
+            addStellarSignatureToTx(transaction, publicKey, signature);
             result['transaction'] = transaction;
             result['signature'] = signature;
             return result;
@@ -157,12 +163,13 @@ Sledger.prototype.signTx_async = function(path, publicKey, transaction) {
     });
 };
 
-Sledger.prototype.signTxHash_async = function(path, publicKey, transaction) {
+StellarLedgerApi.prototype.signTxHash_async = function(path, publicKey, transaction) {
+    checkStellarBip32Path(path);
 	var txHash = transaction.hash();
     var splitPath = utils.splitPath(path);
     var buffer = new Buffer(5 + 1 + splitPath.length * 4);
-    buffer[0] = 0xe0;
-    buffer[1] = 0x08;
+    buffer[0] = CLA;
+    buffer[1] = INS_SIGN_TX_HASH;
     buffer[2] = 0x00;
     buffer[3] = 0x00;
     buffer[4] = 1 + splitPath.length * 4 + txHash.length;
@@ -176,7 +183,7 @@ Sledger.prototype.signTxHash_async = function(path, publicKey, transaction) {
         if (status === '9000') {
             var result = {};
             var signature = new Buffer(response.slice(0, response.length - 4), 'hex');
-            addSignatureToTx(transaction, publicKey, signature);
+            addStellarSignatureToTx(transaction, publicKey, signature);
             result['transaction'] = transaction;
             result['signature'] = signature;
             return result;
@@ -186,10 +193,10 @@ Sledger.prototype.signTxHash_async = function(path, publicKey, transaction) {
     });
 };
 
-function validateIsSinglePaymentTx(transaction) {
+function validateIsSingleStellarPaymentTx(transaction) {
     if (transaction.operations.length > 1) {
         throw new Error('Method signTx_async only allows a single payment operation per transaction.' +
-            ' Use signTxHash_async for this type of transaction');
+            ' Use signTxHash_async for other types of transaction');
     }
     var operation = transaction.operations[0];
     if (operation.type !== 'payment') {
@@ -198,11 +205,28 @@ function validateIsSinglePaymentTx(transaction) {
     }
 }
 
-function addSignatureToTx(transaction, publicKey, signature) {
+function addStellarSignatureToTx(transaction, publicKey, signature) {
     var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
     var hint = keyPair.signatureHint();
     var decorated = new StellarSdk.xdr.DecoratedSignature({hint: hint, signature: signature});
     transaction.signatures.push(decorated);
 }
 
-module.exports = Sledger;
+function checkStellarBip32Path(path) {
+    path.split('/').forEach(function (element, index) {
+        if (!element.toString().endsWith('\'')) {
+            throw new Error("Detected a non-hardened path element in requested bip32 path." +
+                " Non-hardended paths are not supported at this time. Please use an all-hardened path." +
+                " For instance: 44'/148'/0'/0'/0'");
+        }
+        if (index === 1) {
+            if (element !== '148\'') {
+                throw new Error("Not a Stellar coin path. Coin path element: "
+                    + element + ". The Stellar app is authorized only for the Stellar coin path: 148'." +
+                    " For instance: 44'/148'/0'/0'/0'");
+            }
+        }
+    });
+}
+
+module.exports = StellarLedgerApi;

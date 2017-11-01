@@ -15,17 +15,21 @@
 *  limitations under the License.
 ********************************************************************************/
 var StellarSdk = require('stellar-sdk');
+var fs = require('fs');
 
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
 var bip32Path = "44'/148'/0'/0'/0'";
 var destination = "GCKUD4BHIYSAYHU7HBB5FDSW6CSYH3GSOUBPWD2KE7KNBERP4BSKEJDV";
 
+var timeout = 0;
+var debug = true;
+
 StellarSdk.Network.useTestNetwork();
 
-function runTest(comm, api, timeout) {
+function runTest(comm, api) {
 
-    return comm.create_async(timeout, true).then(function (comm) {
+    return comm.create_async(timeout, debug).then(function (comm) {
         var str = new api(comm);
         return str.getPublicKey_async(bip32Path).then(function (result) {
           var publicKey = result['publicKey'];
@@ -65,7 +69,7 @@ function createTransaction(account, publicKey) {
                   destination: destination,
                   asset: asset,
                   amount: "30"
-              })).addMemo(StellarSdk.Memo.text("starlight"))
+              }))//.addMemo(StellarSdk.Memo.id("33"))
           .build();
 }
 

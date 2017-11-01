@@ -22,8 +22,6 @@ if (!browser) {
 }
 var Q = require('q');
 
-var TIMEOUT = 120000;
-
 var scripts = {
     testGetAppConfiguration: require('./testGetAppConfiguration'),
     testGetPublicKey: require('./testGetPublicKey'),
@@ -37,7 +35,7 @@ var scripts = {
 function runScript(scriptName) {
     console.log('running: ' + scriptName);
     Q.resolve().then(function () {
-        return scripts[scriptName](sledger.comm, sledger.api, TIMEOUT);
+        return scripts[scriptName](sledger.comm, sledger.api);
     }).fail(function (err) {
         console.error("failure: " + err);
     });

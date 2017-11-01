@@ -19,9 +19,12 @@ var StellarSdk = require('stellar-sdk');
 var bip32Path = "44'/148'/0'/0'/0'";
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
-function showAccount(comm, api, timeout) {
+var timeout = 0;
+var debug = false;
 
-    return comm.create_async(timeout, true).then(function (comm) {
+function showAccount(comm, api) {
+
+    return comm.create_async(timeout, debug).then(function (comm) {
         var str = new api(comm);
         str.getPublicKey_async(bip32Path, false, false).then(function (result) {
             console.log('showing account details for publicKey: ' + result['publicKey']);

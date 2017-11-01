@@ -15,9 +15,12 @@
 *  limitations under the License.
 ********************************************************************************/
 
-function runTest(comm, api, timeout) {
+var timeout = 0;
+var debug = true;
 
-    return comm.create_async(timeout, true).then(function (comm) {
+function runTest(comm, api) {
+
+    return comm.create_async(timeout, debug).then(function (comm) {
         return new api(comm).getAppConfiguration_async().then(function (result) {
             console.log(result);
         }).catch(function (err) {
