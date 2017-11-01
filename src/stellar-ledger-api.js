@@ -26,6 +26,8 @@ const P1_MORE_APDU = 0x80;
 const P2_LAST_APDU = 0x00;
 const P2_MORE_APDU = 0x80;
 
+// TODO: check bip 32 path is a stellar path and with only hardened elements
+
 var Sledger = function(comm) {
     this.comm = comm;
     this.comm.setScrambleKey('l0v');
@@ -64,24 +66,20 @@ Sledger.prototype.getPublicKey_async = function(path, validateKeypair, returnCha
         var result = {};
         response = new Buffer(response, 'hex');
         var offset = 0;
-        var publicKeyLength = response[offset];
-        offset += 1;
-        var rawPublicKey = response.slice(offset, offset + publicKeyLength);
-        offset += publicKeyLength;
+        var rawPublicKey = response.slice(offset, offset + 32);
+        offset += 32;
         var publicKey = StellarSdk.StrKey.encodeEd25519PublicKey(rawPublicKey);
         result['publicKey'] = publicKey;
         if (validateKeypair) {
-            var signatureLength = response[offset++];
-            var signature = response.slice(offset, offset + signatureLength);
-            offset += signatureLength;
+            var signature = response.slice(offset, offset + 64);
+            offset += 64;
             var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
             if (!keyPair.verify(verifyMsg, signature)) {
                 throw new Error('Bad signature. Keypair is invalid. Please report this.');
             }
         }
         if (returnChainCode) {
-            var chaincodeLength = response[offset++];
-            result['chainCode'] = response.slice(offset, offset + chaincodeLength).toString('hex');
+            result['chainCode'] = response.slice(offset, offset + 32).toString('hex');
         }
         return result;
     });
@@ -108,12 +106,12 @@ Sledger.prototype.signTx_async = function(path, publicKey, transaction) {
     });
 
     var chunkSize = APDU_MAX_SIZE - bufferSize;
-    if (signatureBase.length <= chunkSize) {
+    if (signatureBase.length <= chunkSize) { // it fits in a single apdu
         buffer[3] = P2_LAST_APDU;
         buffer[4] = 1 + splitPath.length * 4 + signatureBase.length;
         buffer = Buffer.concat([buffer, signatureBase]);
         apdus.push(buffer.toString('hex'));
-    } else {
+    } else { // we need to send the multiple apdus to transmit the entire transaction
         buffer[3] = P2_MORE_APDU;
         buffer[4] = 1 + splitPath.length * 4 + chunkSize;
         // assert.equal(APDU_MAX_SIZE, buffer[4], 'Expected max apdu size, was: ' + buffer[4]);
