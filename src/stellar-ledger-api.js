@@ -26,7 +26,7 @@ const INS_SIGN_TX = 0x04;
 const INS_GET_CONF = 0x06;
 const INS_SIGN_TX_HASH = 0x08;
 
-const APDU_MAX_SIZE = 255;
+const APDU_MAX_SIZE = 150;
 const P1_FIRST_APDU = 0x00;
 const P1_MORE_APDU = 0x80;
 const P2_LAST_APDU = 0x00;
@@ -120,7 +120,6 @@ StellarLedgerApi.prototype.signTx_async = function(path, publicKey, transaction)
     } else { // we need to send the multiple apdus to transmit the entire transaction
         buffer[3] = P2_MORE_APDU;
         buffer[4] = 1 + splitPath.length * 4 + chunkSize;
-        // assert.equal(APDU_MAX_SIZE, buffer[4], 'Expected max apdu size, was: ' + buffer[4]);
         var chunk = new Buffer(chunkSize);
         var offset = 0;
         signatureBase.copy(chunk, 0, offset, chunkSize);

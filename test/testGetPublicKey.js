@@ -20,7 +20,7 @@ var returnSignature = true;
 var returnChainCode = true;
 
 var timeout = 0;
-var debug = false;
+var debug = true;
 
 /**
  * Print the stellar public key on the Ledger device at {@code bip32Path}
