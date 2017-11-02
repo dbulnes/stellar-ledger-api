@@ -53,3 +53,61 @@ Chrome only opens u2f channels if the page is served over https. Follow the inst
 You must also enable browser support in the Stellar app settings.
 
 Then open https://localhost:4443/test/index.html to run the tests
+
+## Usage
+
+```javascript
+var StellarLedger = require('stellar-ledger-api');
+var bip32Path = "44'/148'/0'/0'/0'";
+
+/** Case 1: obtaining the public key */
+
+// initialize the communication link - this is the common pattern for all operations
+StellarLedger.comm.create_async().then(function(comm) {
+  var api = new StellarLedger.api(comm);
+  // get the public key for this bip 32 path
+  return api.getPublicKey_async(bip32Path).then(function (result) {
+    var publicKey = result['publicKey'];
+    ...
+  }).catch(function (err) {
+      console.error(err);
+  });
+});
+
+/** Case 2: signing a single payment transaction */
+
+var transaction = ...;
+var publicKey = ...;
+
+StellarLedger.comm.create_async().then(function(comm) {
+  var api = new StellarLedger.api(comm);
+  
+  return api.signTx_async(bip32Path, publicKey, transaction).then(function (result) {
+      var signedTransaction = result['transaction'];
+      ...
+  }).catch(function (err) {
+      console.error(err);
+  });
+});
+
+/** Case 3: signing an arbitrary transaction */
+
+StellarLedger.comm.create_async().then(function(comm) {
+  var api = new StellarLedger.api(comm);
+  
+  return api.signTxHash_async(bip32Path, publicKey, transaction).then(function (result) {
+      var signedTransaction = result['transaction'];
+      ...
+  }).catch(function (err) {
+      console.error(err);
+  });
+});
+```
+
+## Bip32 path
+
+For an explanation on the bip 32 path see the [bip 32 logical hierarchy definition document](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki).
+
+The Ledger Stellar App is currently locked for the XLM cointype 148, so you will get an error when you try to use a different one. This could change in the future when other coins on the stellar network [register their coin type](https://github.com/satoshilabs/slips/blob/master/slip-0044.md).
+
+Only hardened paths are supported at this tie (all path elements must end with ').
