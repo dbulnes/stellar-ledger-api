@@ -32,7 +32,7 @@ If the test succeeds you will see your public key printed on the console.
 
 ## Browser support
 
-The ledger stellar app supports communication over u2f and so does this javascript library. Browsers that support u2f are Google Chrome version 38+ and Opera version 40+.
+The ledger stellar app supports communication over u2f and so does this javascript library. Browsers that support u2f are Google Chrome version 38+, Firefox 57+, and Opera version 40+.
 
 First browserify the library:
 
