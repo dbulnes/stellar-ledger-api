@@ -65,7 +65,7 @@ var bip32Path = "44'/148'/0'/0'/0'";
 // initialize the communication link - this is the common pattern for all operations
 StellarLedger.comm.create_async().then(function(comm) {
   var api = new StellarLedger.api(comm);
-  // get the public key for this bip 32 path
+  // get the public key for this bip32 path
   return api.getPublicKey_async(bip32Path).then(function (result) {
     var publicKey = result['publicKey'];
     ...
@@ -108,6 +108,6 @@ StellarLedger.comm.create_async().then(function(comm) {
 
 For an explanation on the bip 32 path see the [bip 32 logical hierarchy definition document](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki).
 
-The Ledger Stellar App is currently locked for the XLM cointype 148, so you will get an error when you try to use a different one. This could change in the future when other coins on the stellar network [register their coin type](https://github.com/satoshilabs/slips/blob/master/slip-0044.md).
+The Ledger Stellar App is currently locked for the XLM cointype 148, so you will get an error when you try to use a different one. This could change in the future when other coins on the stellar network [register their coin type](https://github.com/satoshilabs/slips/blob/master/slip-0044.md). Since accounts on the Stellar network are not free like on most other networks it makes sense to use the same account for all Stellar-based assets. And that means using the same bip32 path.
 
 Only hardened paths are supported at this tie (all path elements must end with ').
