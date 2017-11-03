@@ -18,7 +18,6 @@
 'use strict';
 
 var utils = require('./utils');
-var StellarSdk = require('stellar-sdk');
 
 const CLA = 0xe0;
 const INS_GET_PK = 0x02;

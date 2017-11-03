@@ -18,7 +18,7 @@
 var browser = (typeof window !== 'undefined');
 
 if (!browser) {
-    sledger = require('../src');
+    StellarLedger = require('../src');
 }
 var Q = require('q');
 
@@ -35,7 +35,7 @@ var scripts = {
 function runScript(scriptName) {
     console.log('running: ' + scriptName);
     Q.resolve().then(function () {
-        return scripts[scriptName](sledger.comm, sledger.Api);
+        return scripts[scriptName](StellarLedger.comm, StellarLedger.Api);
     }).fail(function (err) {
         console.error("failure: " + err);
     });

@@ -1,5 +1,5 @@
 {
-  "name": "sledger-api",
+  "name": "stellar-ledger-api",
   "version": "1.0.0",
   "description": "Javascript API for communication with the Stellar Ledger App",
   "repository": {
@@ -8,11 +8,11 @@
   },
   "main": "./src/index.js",
   "scripts": {
-    "browserify": "browserify --standalone sledger --outfile browser/sledger.js src/index-browserify.js",
+    "browserify": "browserify --standalone StellarLedger --outfile browser/stellar-ledger-api.js src/index-browserify.js",
     "browserify-test": "browserify --standalone runScript --outfile test/runScript-browser.js test/runScript.js",
-    "uglify": "uglifyjs -o browser/sledger.min.js browser/sledger.js",
+    "uglify": "uglifyjs -o browser/stellar-ledger-api.min.js browser/stellar-ledger-api.js",
     "script": "node test/runScript.js",
-    "clean": "rm -f browser/sledger.js browser/sledger.min.js test/runScript-browser.js"
+    "clean": "rm -f browser/stellar-ledger-api.js browser/stellar-ledger-api.min.js test/runScript-browser.js"
   },
   "author": "lenondupe@gmail.com",
   "license": "Apache-2.0",
