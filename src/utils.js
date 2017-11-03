@@ -19,7 +19,7 @@
 var Q = require('q');
 var crc = require('crc');
 var base32 = require('base32.js');
-var ed25519 = require("ed25519");
+var nacl = require("tweetnacl");
 
 var StellarLedgerUtils = {};
 
@@ -69,7 +69,10 @@ StellarLedgerUtils.encodeEd25519PublicKey = function(rawPublicKey) {
 };
 
 StellarLedgerUtils.verifyEd25519Signature = function(data, signature, publicKey) {
-    return ed25519.Verify(data, signature, publicKey);
-}
+    data      = new Uint8Array(data.toJSON().data);
+    signature = new Uint8Array(signature.toJSON().data);
+    publicKey = new Uint8Array(publicKey.toJSON().data);
+    return nacl.sign.detached.verify(data, signature, publicKey);
+};
 
 module.exports = StellarLedgerUtils;
