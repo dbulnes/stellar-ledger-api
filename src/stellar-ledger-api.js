@@ -148,7 +148,7 @@ StellarLedgerApi.prototype.signTx_async = function(path, publicKey, transaction)
             response = nextResponse;
         });
     }).then(function() {
-        var status = Buffer.from(response.slice(response.length - 4), 'hex').readUInt16BE();
+        var status = Buffer.from(response.slice(response.length - 4), 'hex').readUInt16BE(0);
         if (status === SW_OK) {
             var result = {};
             var signature = Buffer.from(response.slice(0, response.length - 4), 'hex');
@@ -177,7 +177,7 @@ StellarLedgerApi.prototype.signTxHash_async = function(path, publicKey, transact
     });
     buffer = Buffer.concat([buffer, txHash]);
     return this.comm.exchange(buffer.toString('hex'), [SW_OK, SW_CANCEL]).then(function(response) {
-        var status = Buffer.from(response.slice(response.length - 4), 'hex').readUInt16BE();
+        var status = Buffer.from(response.slice(response.length - 4), 'hex').readUInt16BE(0);
         if (status === SW_OK) {
             var result = {};
             result['signature'] = Buffer.from(response.slice(0, response.length - 4), 'hex');
