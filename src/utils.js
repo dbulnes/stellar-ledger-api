@@ -17,10 +17,13 @@
 'use strict';
 
 var Q = require('q');
+var crc = require('crc');
+var base32 = require('base32.js');
+var ed25519 = require("ed25519");
 
-var SledgerUtils = {}
+var StellarLedgerUtils = {};
 
-SledgerUtils.splitPath = function(path) {
+StellarLedgerUtils.splitPath = function(path) {
 	var result = [];
 	var components = path.split('/');
 	components.forEach(function (element, index) {
@@ -28,15 +31,15 @@ SledgerUtils.splitPath = function(path) {
 		if (isNaN(number)) {
 			return;
 		}
-		if ((element.length > 1) && (element[element.length - 1] == "'")) {
+		if ((element.length > 1) && (element[element.length - 1] === "'")) {
 			number += 0x80000000;
 		}
 		result.push(number);
 	});
 	return result;
-}
+};
 
-SledgerUtils.foreach = function (arr, callback) {
+StellarLedgerUtils.foreach = function (arr, callback) {
 	var deferred = Q.defer();
 	var iterate = function (index, array, result) {
 		if (index >= array.length) {
@@ -52,6 +55,21 @@ SledgerUtils.foreach = function (arr, callback) {
 	};
 	iterate(0, arr, []);
 	return deferred.promise;
+};
+
+StellarLedgerUtils.encodeEd25519PublicKey = function(rawPublicKey) {
+	var versionByte = 6 << 3; // 'G'
+    var data          = Buffer.from(rawPublicKey);
+    var versionBuffer = Buffer.from([versionByte]);
+    var payload       = Buffer.concat([versionBuffer, data]);
+    var checksum      = Buffer.alloc(2);
+    checksum.writeUInt16LE(crc.crc16xmodem(payload), 0);
+    var unencoded     = Buffer.concat([payload, checksum]);
+    return base32.encode(unencoded);
+};
+
+StellarLedgerUtils.verifyEd25519Signature = function(data, signature, publicKey) {
+    return ed25519.Verify(data, signature, publicKey);
 }
 
-module.exports = SledgerUtils;
+module.exports = StellarLedgerUtils;

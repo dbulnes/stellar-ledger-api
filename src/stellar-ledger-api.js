@@ -32,21 +32,24 @@ const P1_MORE_APDU = 0x80;
 const P2_LAST_APDU = 0x00;
 const P2_MORE_APDU = 0x80;
 
+const SW_OK = 0x9000;
+const SW_CANCEL = 0x6985;
+
 var StellarLedgerApi = function(comm) {
     this.comm = comm;
     this.comm.setScrambleKey('l0v');
 };
 
 StellarLedgerApi.prototype.getAppConfiguration_async = function() {
-    var buffer = new Buffer(5);
+    var buffer = Buffer.alloc(5);
     buffer[0] = CLA;
     buffer[1] = INS_GET_CONF;
     buffer[2] = 0x00;
     buffer[3] = 0x00;
     buffer[4] = 0x00;
-    return this.comm.exchange(buffer.toString('hex'), [0x9000]).then(function(response) {
+    return this.comm.exchange(buffer.toString('hex'), [SW_OK]).then(function(response) {
         var result = {};
-        response = new Buffer(response, 'hex');
+        response = Buffer.from(response, 'hex');
         result['version'] = "" + response[1] + '.' + response[2] + '.' + response[3];
         return result;
     });
@@ -55,7 +58,7 @@ StellarLedgerApi.prototype.getAppConfiguration_async = function() {
 StellarLedgerApi.prototype.getPublicKey_async = function(path, validateKeypair, returnChainCode) {
     checkStellarBip32Path(path);
     var splitPath = utils.splitPath(path);
-    var buffer = new Buffer(5 + 1 + splitPath.length * 4);
+    var buffer = Buffer.alloc(5 + 1 + splitPath.length * 4);
     buffer[0] = CLA;
     buffer[1] = INS_GET_PK;
     buffer[2] = (validateKeypair ? 0x01 : 0x00);
@@ -67,19 +70,17 @@ StellarLedgerApi.prototype.getPublicKey_async = function(path, validateKeypair, 
     });
     var verifyMsg = Buffer.from('0xffffff', 'hex');
     buffer = Buffer.concat([buffer, verifyMsg]);
-    return this.comm.exchange(buffer.toString('hex'), [0x9000]).then(function(response) {
+    return this.comm.exchange(buffer.toString('hex'), [SW_OK]).then(function(response) {
         var result = {};
-        response = new Buffer(response, 'hex');
+        response = Buffer.from(response, 'hex');
         var offset = 0;
         var rawPublicKey = response.slice(offset, offset + 32);
         offset += 32;
-        var publicKey = StellarSdk.StrKey.encodeEd25519PublicKey(rawPublicKey);
-        result['publicKey'] = publicKey;
+        result['publicKey'] = utils.encodeEd25519PublicKey(rawPublicKey);
         if (validateKeypair) {
             var signature = response.slice(offset, offset + 64);
             offset += 64;
-            var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
-            if (!keyPair.verify(verifyMsg, signature)) {
+            if (!utils.verifyEd25519Signature(verifyMsg, signature, rawPublicKey)) {
                 throw new Error('Bad signature. Keypair is invalid. Please report this.');
             }
         }
@@ -102,7 +103,7 @@ StellarLedgerApi.prototype.signTx_async = function(path, publicKey, transaction)
 
     var splitPath = utils.splitPath(path);
     var bufferSize = 5 + 1 + splitPath.length * 4;
-    var buffer = new Buffer(bufferSize);
+    var buffer = Buffer.alloc(bufferSize);
     buffer[0] = CLA;
     buffer[1] = INS_SIGN_TX;
     buffer[2] = P1_FIRST_APDU;
@@ -120,7 +121,7 @@ StellarLedgerApi.prototype.signTx_async = function(path, publicKey, transaction)
     } else { // we need to send the multiple apdus to transmit the entire transaction
         buffer[3] = P2_MORE_APDU;
         buffer[4] = 1 + splitPath.length * 4 + chunkSize;
-        var chunk = new Buffer(chunkSize);
+        var chunk = Buffer.alloc(chunkSize);
         var offset = 0;
         signatureBase.copy(chunk, 0, offset, chunkSize);
         buffer = Buffer.concat([buffer, chunk]);
@@ -130,10 +131,10 @@ StellarLedgerApi.prototype.signTx_async = function(path, publicKey, transaction)
             var remaining = signatureBase.length - offset;
             var available = APDU_MAX_SIZE - 5;
             chunkSize = remaining < available ? remaining : available;
-            chunk = new Buffer(chunkSize);
+            chunk = Buffer.alloc(chunkSize);
             signatureBase.copy(chunk, 0, offset, offset + chunkSize);
             offset += chunkSize;
-            buffer = new Buffer(5);
+            buffer = Buffer.alloc(5);
             buffer[0] = CLA;
             buffer[1] = INS_SIGN_TX;
             buffer[2] = P1_MORE_APDU;
@@ -144,15 +145,14 @@ StellarLedgerApi.prototype.signTx_async = function(path, publicKey, transaction)
         }
     }
     return utils.foreach(apdus, function(apdu) {
-        return self.comm.exchange(apdu, [0x9000, 0x6985]).then(function(nextResponse) {
+        return self.comm.exchange(apdu, [SW_OK, SW_CANCEL]).then(function(nextResponse) {
             response = nextResponse;
         });
     }).then(function() {
-        var status = response.slice(response.length - 4).toString('hex');
-        if (status === '9000') {
+        var status = Buffer.from(response.slice(response.length - 4), 'hex').readUInt16BE();
+        if (status === SW_OK) {
             var result = {};
-            var signature = new Buffer(response.slice(0, response.length - 4), 'hex');
-            addStellarSignatureToTx(transaction, publicKey, signature);
+            var signature = Buffer.from(response.slice(0, response.length - 4), 'hex');
             result['transaction'] = transaction;
             result['signature'] = signature;
             return result;
@@ -166,7 +166,7 @@ StellarLedgerApi.prototype.signTxHash_async = function(path, publicKey, transact
     checkStellarBip32Path(path);
 	var txHash = transaction.hash();
     var splitPath = utils.splitPath(path);
-    var buffer = new Buffer(5 + 1 + splitPath.length * 4);
+    var buffer = Buffer.alloc(5 + 1 + splitPath.length * 4);
     buffer[0] = CLA;
     buffer[1] = INS_SIGN_TX_HASH;
     buffer[2] = 0x00;
@@ -177,14 +177,11 @@ StellarLedgerApi.prototype.signTxHash_async = function(path, publicKey, transact
         buffer.writeUInt32BE(element, 6 + 4 * index);
     });
     buffer = Buffer.concat([buffer, txHash]);
-    return this.comm.exchange(buffer.toString('hex'), [0x9000, 0x6985]).then(function(response) {
-        var status = response.slice(response.length - 4).toString('hex');
-        if (status === '9000') {
+    return this.comm.exchange(buffer.toString('hex'), [SW_OK, SW_CANCEL]).then(function(response) {
+        var status = Buffer.from(response.slice(response.length - 4), 'hex').readUInt16BE();
+        if (status === SW_OK) {
             var result = {};
-            var signature = new Buffer(response.slice(0, response.length - 4), 'hex');
-            addStellarSignatureToTx(transaction, publicKey, signature);
-            result['transaction'] = transaction;
-            result['signature'] = signature;
+            result['signature'] = Buffer.from(response.slice(0, response.length - 4), 'hex');
             return result;
         } else {
             throw new Error('Transaction approval request was rejected');
@@ -202,13 +199,6 @@ function validateIsSingleStellarPaymentTx(transaction) {
         throw new Error('Method signTx_async only allows operations of type \'payment\'.' +
             ' Found: ' + operation.type + '. Use signTxHash_async for this type of transaction');
     }
-}
-
-function addStellarSignatureToTx(transaction, publicKey, signature) {
-    var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
-    var hint = keyPair.signatureHint();
-    var decorated = new StellarSdk.xdr.DecoratedSignature({hint: hint, signature: signature});
-    transaction.signatures.push(decorated);
 }
 
 function checkStellarBip32Path(path) {

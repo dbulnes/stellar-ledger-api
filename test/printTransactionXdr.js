@@ -18,29 +18,23 @@
 var StellarSdk = require('stellar-sdk');
 var fs = require('fs');
 
-StellarSdk.Network.usePublicNetwork();
-var server = new StellarSdk.Server('https://horizon.stellar.org/');
-var destination = "GCKUD4BHIYSAYHU7HBB5FDSW6CSYH3GSOUBPWD2KE7KNBERP4BSKEJDV";
-var publicKey = "GAQNVGMLOXSCWH37QXIHLQJH6WZENXYSVWLPAEF4673W64VRNZLRHMFM";
+StellarSdk.Network.useTestNetwork();
+
+var server = new StellarSdk.Server('https://horizon-testnet.stellar.org/');
+var destination = "GBMHY2EIEGFHW6G4OIC6QA7I7IUPUDD33PGCJLVC57THODEUQY62KNHD";
+var publicKey = "GBGBTCCP7WG2E5XFYLQFJP2DYOQZPCCDCHK62K6TZD4BHMNYI5WSXESH";
 
 function loadAccount(publicKey) {
     return server.loadAccount(publicKey);
 }
 
 function createTransaction(account) {
-    var opts = {
-        timebounds: {
-            minTime: 50,
-            maxTime: 100
-        }
-    };
-    return new StellarSdk.TransactionBuilder(account, opts)
+    return new StellarSdk.TransactionBuilder(account)
         .addOperation(StellarSdk.Operation.payment({
             destination: destination,
             asset: StellarSdk.Asset.native(),
-            amount: "1"
-        }))
-        .addMemo(StellarSdk.Memo.id("33"))
+            amount: "30"
+        })).addMemo(StellarSdk.Memo.text("starlight"))
         .build();
 }
 

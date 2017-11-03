@@ -25,11 +25,11 @@ var debug = true;
 /**
  * Print the stellar public key on the Ledger device at {@code bip32Path}
  */
-function runTest(comm, api) {
+function runTest(comm, Api) {
 
     return comm.create_async(timeout, debug).then(function (comm) {
-        var str = new api(comm);
-        str.getPublicKey_async(bip32Path, returnSignature, returnChainCode).then(function (result) {
+        var api = new Api(comm);
+        api.getPublicKey_async(bip32Path, returnSignature, returnChainCode).then(function (result) {
             console.log('publicKey: ' + result['publicKey']);
             console.log('chainCode: ' + result['chainCode']);
         }).catch(function (err) {

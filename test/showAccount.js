@@ -22,11 +22,11 @@ var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 var timeout = 0;
 var debug = false;
 
-function showAccount(comm, api) {
+function showAccount(comm, Api) {
 
     return comm.create_async(timeout, debug).then(function (comm) {
-        var str = new api(comm);
-        str.getPublicKey_async(bip32Path, false, false).then(function (result) {
+        var api = new Api(comm);
+        api.getPublicKey_async(bip32Path, false, false).then(function (result) {
             console.log('showing account details for publicKey: ' + result['publicKey']);
             server.loadAccount(result['publicKey']).then(function(account) {
                 console.log('Account details for: ' + result['publicKey']);

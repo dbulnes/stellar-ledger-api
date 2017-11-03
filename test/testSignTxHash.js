@@ -19,7 +19,7 @@ var StellarSdk = require('stellar-sdk');
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
 var bip32Path = "44'/148'/0'/0'/0'";
-var destination = "GCKUD4BHIYSAYHU7HBB5FDSW6CSYH3GSOUBPWD2KE7KNBERP4BSKEJDV";
+var destination = "GBGBTCCP7WG2E5XFYLQFJP2DYOQZPCCDCHK62K6TZD4BHMNYI5WSXESH";
 
 var timeout = 0;
 var debug = true;
@@ -27,15 +27,18 @@ var debug = true;
 
 StellarSdk.Network.useTestNetwork();
 
-function runTest(comm, api) {
+/**
+ * Sign a transaction hash
+ */
+function runTest(comm, Api) {
 
     return comm.create_async(timeout, debug).then(function (comm) {
-        var str = new api(comm);
-        return str.getPublicKey_async(bip32Path).then(function (result) {
+        var api = new Api(comm);
+        return api.getPublicKey_async(bip32Path).then(function (result) {
             var publicKey = result['publicKey'];
             return loadAccount(publicKey).then(function (account) {
                 var tx = createTransaction(account);
-                return str.signTxHash_async(bip32Path, publicKey, tx).then(function (result) {
+                return api.signTxHash_async(bip32Path, publicKey, tx).then(function (result) {
                     var txHash = tx.hash();
                     var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
                     if (keyPair.verify(txHash, result['signature'])) {
@@ -43,6 +46,8 @@ function runTest(comm, api) {
                     } else {
                         console.error('Failure: Bad signature');
                     }
+                    // addSignatureToTransaction(publicKey, result['signature'], tx);
+                    // sendTransaction(tx);
                 }).catch(function (err) {
                     console.error(err);
                 });
@@ -63,6 +68,24 @@ function createTransaction(account) {
             amount: "30"
         }))
         .build();
+}
+
+function addSignatureToTransaction(publicKey, signature, transaction) {
+    var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
+    var hint = keyPair.signatureHint();
+    var decorated = new StellarSdk.xdr.DecoratedSignature({hint: hint, signature: signature});
+    transaction.signatures.push(decorated);
+}
+
+
+function sendTransaction(transaction) {
+    server.submitTransaction(transaction)
+        .then(function (transactionResult) {
+            console.log(transactionResult);
+        })
+        .catch(function (err) {
+            console.error(err);
+        });
 }
 
 module.exports = runTest;

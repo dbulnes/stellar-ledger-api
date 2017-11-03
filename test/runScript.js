@@ -35,7 +35,7 @@ var scripts = {
 function runScript(scriptName) {
     console.log('running: ' + scriptName);
     Q.resolve().then(function () {
-        return scripts[scriptName](sledger.comm, sledger.api);
+        return scripts[scriptName](sledger.comm, sledger.Api);
     }).fail(function (err) {
         console.error("failure: " + err);
     });

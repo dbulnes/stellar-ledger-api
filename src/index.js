@@ -24,6 +24,6 @@ if (isNode) {
 } else {
     StellarLedger.comm = ledger.comm_u2f;
 }
-StellarLedger.api = require('./stellar-ledger-api');
+StellarLedger.Api = require('./stellar-ledger-api');
 
 module.exports = StellarLedger;

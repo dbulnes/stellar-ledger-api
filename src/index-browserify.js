@@ -18,6 +18,6 @@
 var sledger = module.exports;
 
 sledger.comm = require('ledgerco').comm_u2f;
-sledger.api = require('./stellar-ledger-api');
+sledger.Api = require('./stellar-ledger-api');
 
 module.exports = sledger;

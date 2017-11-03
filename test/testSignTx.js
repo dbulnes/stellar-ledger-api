@@ -20,57 +20,72 @@ var fs = require('fs');
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
 var bip32Path = "44'/148'/0'/0'/0'";
-var destination = "GCKUD4BHIYSAYHU7HBB5FDSW6CSYH3GSOUBPWD2KE7KNBERP4BSKEJDV";
+var destination = "GBGBTCCP7WG2E5XFYLQFJP2DYOQZPCCDCHK62K6TZD4BHMNYI5WSXESH";
 
 var timeout = 0;
 var debug = true;
 
 StellarSdk.Network.useTestNetwork();
 
-function runTest(comm, api) {
+/**
+ * Sign a single payment transaction
+ */
+function runTest(comm, Api) {
 
     return comm.create_async(timeout, debug).then(function (comm) {
-        var str = new api(comm);
-        return str.getPublicKey_async(bip32Path).then(function (result) {
-          var publicKey = result['publicKey'];
-          return loadAccount(publicKey).then(function (account) {
-            var tx = createTransaction(account, publicKey);
-            return str.signTx_async(bip32Path, publicKey, tx).then(function (result) {
-                var txHash = tx.hash();
-                var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
-                if (keyPair.verify(txHash, result['signature'])) {
-                    console.log('Success! Good signature');
-                } else {
-                    console.error('Failure: Bad signature');
-                }
-            }).catch(function (err) {
-                console.error(err);
+        var api = new Api(comm);
+        return api.getPublicKey_async(bip32Path).then(function (result) {
+            var publicKey = result['publicKey'];
+            return loadAccount(publicKey).then(function (account) {
+                var tx = createTransaction(account);
+                return api.signTx_async(bip32Path, publicKey, tx).then(function (result) {
+                    var txHash = tx.hash();
+                    var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
+                    if (keyPair.verify(txHash, result['signature'])) {
+                        console.log('Success! Good signature');
+                    } else {
+                        console.error('Failure: Bad signature');
+                    }
+                    // addSignatureToTransaction(publicKey, result['signature'], tx);
+                    // sendTransaction(tx);
+                }).catch(function (err) {
+                    console.error(err);
+                });
             });
-          });
         });
     });
 }
 
 function loadAccount(publicKey) {
-  return server.loadAccount(publicKey);
+    return server.loadAccount(publicKey);
 }
 
-function createTransaction(account, publicKey) {
-    var asset = new StellarSdk.Asset("DUPE", publicKey);
-    var opts = {
-        timebounds: {
-            minTime: 50,
-            maxTime: 100
-        }
-    };
-  return new StellarSdk.TransactionBuilder(account, opts)
-          .addOperation(StellarSdk.Operation.payment({
-                  source: publicKey,
-                  destination: destination,
-                  asset: asset,
-                  amount: "30"
-              }))//.addMemo(StellarSdk.Memo.id("33"))
-          .build();
+function createTransaction(account) {
+    return new StellarSdk.TransactionBuilder(account)
+        .addOperation(StellarSdk.Operation.payment({
+            destination: destination,
+            asset: StellarSdk.Asset.native(),
+            amount: "10"
+        }))
+        .build();
+}
+
+function addSignatureToTransaction(publicKey, signature, transaction) {
+    var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
+    var hint = keyPair.signatureHint();
+    var decorated = new StellarSdk.xdr.DecoratedSignature({hint: hint, signature: signature});
+    transaction.signatures.push(decorated);
+}
+
+
+function sendTransaction(transaction) {
+    server.submitTransaction(transaction)
+        .then(function (transactionResult) {
+            console.log(transactionResult);
+        })
+        .catch(function (err) {
+            console.error(err);
+        });
 }
 
 module.exports = runTest;

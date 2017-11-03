@@ -64,7 +64,7 @@ var bip32Path = "44'/148'/0'/0'/0'";
 
 // initialize the communication link - this is the common pattern for all operations
 StellarLedger.comm.create_async().then(function(comm) {
-  var api = new StellarLedger.api(comm);
+  var api = new StellarLedger.Api(comm);
   // get the public key for this bip32 path
   return api.getPublicKey_async(bip32Path).then(function (result) {
     var publicKey = result['publicKey'];
@@ -80,10 +80,12 @@ var transaction = ...;
 var publicKey = ...;
 
 StellarLedger.comm.create_async().then(function(comm) {
-  var api = new StellarLedger.api(comm);
+  var api = new StellarLedger.Api(comm);
   
   return api.signTx_async(bip32Path, publicKey, transaction).then(function (result) {
-      var signedTransaction = result['transaction'];
+      var signature = result['signature'];
+      // add the signature to the transaction
+      addSignatureToTransaction(signature, transaction);
       ...
   }).catch(function (err) {
       console.error(err);
@@ -93,15 +95,27 @@ StellarLedger.comm.create_async().then(function(comm) {
 /** Case 3: signing an arbitrary transaction */
 
 StellarLedger.comm.create_async().then(function(comm) {
-  var api = new StellarLedger.api(comm);
+  var api = new StellarLedger.Api(comm);
   
   return api.signTxHash_async(bip32Path, publicKey, transaction).then(function (result) {
-      var signedTransaction = result['transaction'];
+      var signature = result['signature'];
+      addSignatureToTransaction(signature, transaction);
       ...
   }).catch(function (err) {
       console.error(err);
   });
 });
+
+/**
+ * Due to incompatibilities between different versions of StellarSdk
+ * it is better the client code handle adding the signature to the transaction
+ */
+function addSignatureToTransaction(publicKey, signature, transaction) {
+  var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
+  var hint = keyPair.signatureHint();
+  var decorated = new StellarSdk.xdr.DecoratedSignature({hint: hint, signature: signature});
+  transaction.signatures.push(decorated);
+}
 ```
 
 ## Bip32 path

@@ -18,10 +18,10 @@
 var timeout = 0;
 var debug = true;
 
-function runTest(comm, api) {
+function runTest(comm, Api) {
 
     return comm.create_async(timeout, debug).then(function (comm) {
-        return new api(comm).getAppConfiguration_async().then(function (result) {
+        return new Api(comm).getAppConfiguration_async().then(function (result) {
             console.log(result);
         }).catch(function (err) {
             console.log(err);
