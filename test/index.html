@@ -8,15 +8,46 @@
             var script = select.options[select.selectedIndex].text;
             runScript(script);
         }
+        function connect() {
+            StellarLedger.comm.create_async().then(function (comm) {
+                console.log('Connecting ...');
+                var api = new StellarLedger.Api(comm);
+                api.getAppConfiguration_async().then(function (result) {
+                    console.log('Connected');
+                    onConnectSuccess(result);
+                }).catch(function (err) {
+                    if (err.errorCode === 5) {
+                        console.log('Timeout; retrying');
+                        connect();
+                    } else {
+                        console.log('Unable to connect with ledger device: ' + err);
+                        onConnectFail(err);
+                    }
+                });
+            }).catch(function (err) {
+                console.log('Unable to connect with ledger device' + err);
+                onConnectFail(err);
+            });
+        }
+        function onConnectSuccess(result) {
+            document.getElementById('msg').innerHTML = 'Stellar App version ' + result['version'];
+            document.getElementById('script').disabled = false;
+            document.getElementById('runScript').disabled = false;
+        }
+        function onConnectFail() {
+            document.getElementById('msg').innerHTML = 'Failed to connect. Reload page to try again.';
+        }
     </script>
 </head>
-<body>
-<select id="script">
-    <option>testGetAppConfiguration</option>
-    <option>testGetPublicKey</option>
-    <option>testSignTx</option>
-    <option>testSignTxHash</option>
-</select>
-<button type="button" onClick="selectAndRun()">run script</button>
+<body onload="connect()">
+<div id="msg">Connect you Ledger and open the Stellar App</div>
+<div id="form">
+    <select id="script" disabled>
+        <option>testGetPublicKey</option>
+        <option>testSignTx</option>
+        <option>testSignTxHash</option>
+    </select>
+    <input id='runScript' type="button" onClick="selectAndRun()" value="run script" disabled>
+</div>
 </body>
 </html>
