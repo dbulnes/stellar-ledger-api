@@ -15,7 +15,7 @@
  *  limitations under the License.
  ********************************************************************************/
 
-var bip32Path = "44'/148'/0'/0'/0'";
+var bip32Path = "44'/148'/0'";
 var returnSignature = true;
 var returnChainCode = true;
 

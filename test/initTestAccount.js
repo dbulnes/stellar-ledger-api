@@ -17,7 +17,7 @@
 
 var request = require('request');
 
-var bip32Path = "44'/148'/0'/0'/0'";
+var bip32Path = "44'/148'/0'";
 var timeout = 0;
 var debug = false;
 

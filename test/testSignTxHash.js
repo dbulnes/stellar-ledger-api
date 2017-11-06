@@ -18,7 +18,7 @@ var StellarSdk = require('stellar-sdk');
 
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
-var bip32Path = "44'/148'/0'/0'/0'";
+var bip32Path = "44'/148'/0'";
 var destination = "GBGBTCCP7WG2E5XFYLQFJP2DYOQZPCCDCHK62K6TZD4BHMNYI5WSXESH";
 
 var timeout = 0;
