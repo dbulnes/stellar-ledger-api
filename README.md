@@ -58,7 +58,7 @@ Then open https://localhost:4443/test/index.html to run the tests
 
 ```javascript
 var StellarLedger = require('stellar-ledger-api');
-var bip32Path = "44'/148'/0'/0'/0'";
+var bip32Path = "44'/148'/0'";
 
 /** Case 1: obtaining the public key */
 
