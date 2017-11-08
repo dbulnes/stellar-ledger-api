@@ -122,6 +122,6 @@ function addSignatureToTransaction(publicKey, signature, transaction) {
 
 For an explanation on the bip 32 path see the [bip 32 logical hierarchy definition document](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki).
 
-The Ledger Stellar App is currently locked for the XLM cointype 148, so you will get an error when you try to use a different one. This could change in the future when other coins on the stellar network [register their coin type](https://github.com/satoshilabs/slips/blob/master/slip-0044.md). Since accounts on the Stellar network are not free like on most other networks it makes sense to use the same account for all Stellar-based assets. And that means using the same bip32 path.
+The Ledger Stellar App is locked on the path prefix (`44'/148'`), so you will get an error when you try to use a different one. Only hardened paths are supported at this time (all path elements must end with '). There's [a proposal](https://github.com/stellar/stellar-protocol/issues/61) for a BIP32 path convention for Stellar. Following that will ensure interoperability between wallets that use BIP32 HD key derivation.
 
-Only hardened paths are supported at this time (all path elements must end with ').
+
