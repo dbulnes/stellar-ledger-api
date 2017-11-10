@@ -207,10 +207,7 @@ StellarLedgerApi.prototype.removeDeviceListener = function(listener) {
     }
     var index = this.listeners.indexOf(listener);
     if (index !== -1) {
-        console.log('found');
         this.listeners.splice(index, 1);
-    } else {
-        console.log('not found');
     }
 }
 
