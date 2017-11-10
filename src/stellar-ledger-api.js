@@ -201,6 +201,13 @@ StellarLedgerApi.prototype.addDeviceListener = function(listener) {
     }
 };
 
+StellarLedgerApi.prototype.clearDeviceListeners = function() {
+    if (typeof window === 'undefined') {
+        throw new Error('This function is not available for node-hid');
+    }
+    this.listeners = [];
+};
+
 function notifyListeners(api, status, msg) {
     if (api.status !== status) {
         api.status = status;
@@ -211,6 +218,9 @@ function notifyListeners(api, status, msg) {
 }
 
 function monitorDevice(api) {
+    if (api.listeners.length === 0) {
+        return;
+    }
     api.getPublicKey_async("44'/148'/0'").then(function () {
         notifyListeners(api, 'Connected');
         setTimeout(monitorDevice.bind(null, api), 5000);

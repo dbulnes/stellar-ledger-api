@@ -1,6 +1,6 @@
 {
   "name": "stellar-ledger-api",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Javascript API for communication with the Stellar Ledger App",
   "repository": {
     "type": "git",
