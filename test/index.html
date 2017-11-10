@@ -3,6 +3,7 @@
     <script src="../browser/stellar-ledger-api.js"></script>
     <script src="runScript-browser.js"></script>
     <script>
+        var ledgerApi;
         function selectAndRun() {
             var select = document.getElementById('script');
             var script = select.options[select.selectedIndex].text;
@@ -10,22 +11,23 @@
         }
         function connect() {
             StellarLedger.comm.create_async(5).then(function (comm) {
-                var api = new StellarLedger.Api(comm);
-                api.addDeviceListener(function(status, msg) {
-                    if (status === 'Connected') {
-                        onConnect();
-                    } else if (status === 'Timeout') {
-                        onTimeout();
-                    } else if (status === 'Asleep') {
-                        onAsleep();
-                    } else if (status === 'Error') {
-                        onError(msg);
-                    }
-                });
+                ledgerApi = new StellarLedger.Api(comm);
+                ledgerApi.addDeviceListener(deviceListener);
             }).catch(function (err) {
                 console.log('Unable to connect with ledger device' + err);
                 onError(err);
             });
+        }
+        function deviceListener(status, msg) {
+            if (status === 'Connected') {
+                onConnect();
+            } else if (status === 'Timeout') {
+                onTimeout();
+            } else if (status === 'Asleep') {
+                onAsleep();
+            } else if (status === 'Error') {
+                onError(msg);
+            }
         }
         function onTimeout() {
             document.getElementById('msg').innerHTML = 'Connect you Ledger and open the Stellar App';

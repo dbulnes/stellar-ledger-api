@@ -201,6 +201,19 @@ StellarLedgerApi.prototype.addDeviceListener = function(listener) {
     }
 };
 
+StellarLedgerApi.prototype.removeDeviceListener = function(listener) {
+    if (typeof window === 'undefined') {
+        throw new Error('This function is not available for node-hid');
+    }
+    var index = this.listeners.indexOf(listener);
+    if (index !== -1) {
+        console.log('found');
+        this.listeners.splice(index, 1);
+    } else {
+        console.log('not found');
+    }
+}
+
 StellarLedgerApi.prototype.clearDeviceListeners = function() {
     if (typeof window === 'undefined') {
         throw new Error('This function is not available for node-hid');
