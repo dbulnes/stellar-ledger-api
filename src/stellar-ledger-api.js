@@ -241,18 +241,16 @@ function validateIsSingleStellarPaymentTx(transaction) {
 }
 
 function checkStellarBip32Path(path) {
-    path.split('/').forEach(function (element, index) {
+    if (!path.startsWith("44'/148'")) {
+        throw new Error("Not a Stellar BIP32 path. Path: " + path + "."
+            + " The Stellar app is authorized only for paths starting with 44'/148'."
+            + " Example: 44'/148'/0'");
+    }
+    path.split('/').forEach(function (element) {
         if (!element.toString().endsWith('\'')) {
-            throw new Error("Detected a non-hardened path element in requested bip32 path." +
+            throw new Error("Detected a non-hardened path element in requested BIP32 path." +
                 " Non-hardended paths are not supported at this time. Please use an all-hardened path." +
-                " For instance: 44'/148'/0'/0'/0'");
-        }
-        if (index === 1) {
-            if (element !== '148\'') {
-                throw new Error("Not a Stellar coin path. Coin path element: "
-                    + element + ". The Stellar app is authorized only for the Stellar coin path: 148'." +
-                    " For instance: 44'/148'/0'/0'/0'");
-            }
+                " Example: 44'/148'/0'");
         }
     });
 }
