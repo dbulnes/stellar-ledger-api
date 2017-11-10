@@ -37,6 +37,8 @@ const SW_CANCEL = 0x6985;
 var StellarLedgerApi = function(comm) {
     this.comm = comm;
     this.comm.setScrambleKey('l0v');
+    this.listeners = [];
+    this.status = 'None';
 };
 
 StellarLedgerApi.prototype.getAppConfiguration_async = function() {
@@ -187,6 +189,41 @@ StellarLedgerApi.prototype.signTxHash_async = function(path, publicKey, transact
         }
     });
 };
+
+StellarLedgerApi.prototype.addDeviceListener = function(listener) {
+    this.listeners.push(listener);
+    if (!this.monitoring) {
+        monitorDevice(this);
+        this.monitoring = true;
+    }
+};
+
+function notifyListeners(api, status, msg) {
+    if (api.status !== status) {
+        api.status = status;
+        api.listeners.forEach(function(listener) {
+            listener(status, msg);
+        });
+    }
+}
+
+function monitorDevice(api) {
+    api.getPublicKey_async("44'/148'/0'").then(function () {
+        notifyListeners(api, 'Connected');
+        setTimeout(monitorDevice.bind(null, api), 5000);
+    }).catch(function (err) {
+        if (err.errorCode === 5) {
+            notifyListeners(api, 'Timeout');
+            monitorDevice(api);
+        } else if (err === 'Invalid status 6801') {
+            notifyListeners(api, 'Asleep');
+            setTimeout(monitorDevice.bind(null, api), 5000);
+        } else {
+            notifyListeners(api, 'Error', err);
+            setTimeout(monitorDevice.bind(null, api), 5000);
+        }
+    });
+}
 
 function validateIsSingleStellarPaymentTx(transaction) {
     if (transaction.operations.length > 1) {

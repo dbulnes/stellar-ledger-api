@@ -9,38 +9,46 @@
             runScript(script);
         }
         function connect() {
-            StellarLedger.comm.create_async().then(function (comm) {
-                console.log('Connecting ...');
+            StellarLedger.comm.create_async(5).then(function (comm) {
                 var api = new StellarLedger.Api(comm);
-                api.getAppConfiguration_async().then(function (result) {
-                    console.log('Connected');
-                    onConnectSuccess(result);
-                }).catch(function (err) {
-                    if (err.errorCode === 5) {
-                        console.log('Timeout; retrying');
-                        connect();
-                    } else {
-                        console.log('Unable to connect with ledger device: ' + err);
-                        onConnectFail(err);
+                api.addDeviceListener(function(status, msg) {
+                    if (status === 'Connected') {
+                        onConnect();
+                    } else if (status === 'Timeout') {
+                        onTimeout();
+                    } else if (status === 'Asleep') {
+                        onAsleep();
+                    } else if (status === 'Error') {
+                        onError(msg);
                     }
                 });
             }).catch(function (err) {
                 console.log('Unable to connect with ledger device' + err);
-                onConnectFail(err);
+                onError(err);
             });
         }
-        function onConnectSuccess(result) {
-            document.getElementById('msg').innerHTML = 'Stellar App version ' + result['version'];
+        function onTimeout() {
+            document.getElementById('msg').innerHTML = 'Connect you Ledger and open the Stellar App';
+            document.getElementById('script').disabled = true;
+            document.getElementById('runScript').disabled = true;
+        }
+        function onConnect() {
+            document.getElementById('msg').innerHTML = 'Ledger Connected';
             document.getElementById('script').disabled = false;
             document.getElementById('runScript').disabled = false;
         }
-        function onConnectFail() {
-            document.getElementById('msg').innerHTML = 'Failed to connect. Reload page to try again.';
+        function onAsleep() {
+            document.getElementById('msg').innerHTML = 'Ledger Asleep';
+            document.getElementById('script').disabled = true;
+            document.getElementById('runScript').disabled = true;
+        }
+        function onError(msg) {
+            document.getElementById('msg').innerHTML = 'Error connecting: ' + msg;
         }
     </script>
 </head>
-<body onload="connect()">
-<div id="msg">Connect you Ledger and open the Stellar App</div>
+<body onload="onTimeout();connect();">
+<div id="msg"></div>
 <div id="form">
     <select id="script" disabled>
         <option>testGetPublicKey</option>
