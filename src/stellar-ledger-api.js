@@ -191,6 +191,9 @@ StellarLedgerApi.prototype.signTxHash_async = function(path, publicKey, transact
 };
 
 StellarLedgerApi.prototype.addDeviceListener = function(listener) {
+    if (typeof window === 'undefined') {
+        throw new Error('This function is not available for node-hid');
+    }
     this.listeners.push(listener);
     if (!this.monitoring) {
         monitorDevice(this);
