@@ -10,46 +10,43 @@
             runScript(script);
         }
         function connect() {
-            StellarLedger.comm.create_async(5).then(function (comm) {
-                ledgerApi = new StellarLedger.Api(comm);
-                ledgerApi.addDeviceListener(deviceListener);
-            }).catch(function (err) {
-                console.log('Unable to connect with ledger device' + err);
-                onError(err);
-            });
+            ledgerApi = new StellarLedger.Api(new StellarLedger.comm(3));
+            ledgerApi.addDeviceListener(deviceListener);
+        }
+        function disconnect() {
+            ledgerApi.clearDeviceListeners();
         }
         function deviceListener(status, msg) {
             if (status === 'Connected') {
                 onConnect();
             } else if (status === 'Timeout') {
                 onTimeout();
-            } else if (status === 'Asleep') {
-                onAsleep();
             } else if (status === 'Error') {
                 onError(msg);
             }
         }
         function onTimeout() {
-            document.getElementById('msg').innerHTML = 'Connect you Ledger and open the Stellar App';
-            document.getElementById('script').disabled = true;
-            document.getElementById('runScript').disabled = true;
+            displayMesage('Connect your Ledger and open the Stellar App');
+            setFormDisabled(true);
         }
         function onConnect() {
-            document.getElementById('msg').innerHTML = 'Ledger Connected';
-            document.getElementById('script').disabled = false;
-            document.getElementById('runScript').disabled = false;
-        }
-        function onAsleep() {
-            document.getElementById('msg').innerHTML = 'Ledger Asleep';
-            document.getElementById('script').disabled = true;
-            document.getElementById('runScript').disabled = true;
+            displayMesage('Ledger Connected');
+            setFormDisabled(false);
         }
         function onError(msg) {
-            document.getElementById('msg').innerHTML = 'Error connecting: ' + msg;
+            displayMesage('Error connecting: ' + msg);
+            setFormDisabled(true);
+        }
+        function displayMesage(msg) {
+            document.getElementById('msg').innerHTML = msg;
+        }
+        function setFormDisabled(disabled) {
+            document.getElementById('script').disabled = disabled;
+            document.getElementById('runScript').disabled = disabled;
         }
     </script>
 </head>
-<body onload="onTimeout();connect();">
+<body onload="onTimeout();connect();" onunload="disconnect()">
 <div id="msg"></div>
 <div id="form">
     <select id="script" disabled>

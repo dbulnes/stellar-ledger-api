@@ -34,11 +34,15 @@ const P2_MORE_APDU = 0x80;
 const SW_OK = 0x9000;
 const SW_CANCEL = 0x6985;
 
-var StellarLedgerApi = function(comm) {
+const MONITORING_INTERVAL_DEFAULT = 3;
+
+var StellarLedgerApi = function(comm, config) {
     this.comm = comm;
+    config = config || {};
     this.comm.setScrambleKey('l0v');
     this.listeners = [];
     this.status = 'None';
+    this.monitoringInterval = config.monitoringInterval || MONITORING_INTERVAL_DEFAULT;
 };
 
 StellarLedgerApi.prototype.getAppConfiguration_async = function() {
@@ -229,21 +233,19 @@ function notifyListeners(api, status, msg) {
 
 function monitorDevice(api) {
     if (api.listeners.length === 0) {
+        api.monitoring = false;
         return;
     }
-    api.getPublicKey_async("44'/148'/0'").then(function () {
+    api.getAppConfiguration_async().then(function () {
         notifyListeners(api, 'Connected');
-        setTimeout(monitorDevice.bind(null, api), 5000);
+        setTimeout(monitorDevice.bind(null, api), api.monitoringInterval);
     }).catch(function (err) {
         if (err.errorCode === 5) {
             notifyListeners(api, 'Timeout');
             monitorDevice(api);
-        } else if (err === 'Invalid status 6801') {
-            notifyListeners(api, 'Asleep');
-            setTimeout(monitorDevice.bind(null, api), 5000);
         } else {
             notifyListeners(api, 'Error', err);
-            setTimeout(monitorDevice.bind(null, api), 5000);
+            setTimeout(monitorDevice.bind(null, api), api.monitoringInterval);
         }
     });
 }

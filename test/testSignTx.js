@@ -22,7 +22,7 @@ var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 var bip32Path = "44'/148'/0'";
 var destination = "GBGBTCCP7WG2E5XFYLQFJP2DYOQZPCCDCHK62K6TZD4BHMNYI5WSXESH";
 
-var timeout = 0;
+var timeout = 90;
 var debug = true;
 
 StellarSdk.Network.useTestNetwork();
@@ -66,7 +66,7 @@ function createTransaction(account) {
             destination: destination,
             asset: StellarSdk.Asset.native(),
             amount: "10"
-        }))//.addMemo(StellarSdk.Memo.text("starlight"))
+        })).addMemo(StellarSdk.Memo.text("sending starlight"))
         .build();
 }
 
