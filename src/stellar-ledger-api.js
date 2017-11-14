@@ -96,7 +96,7 @@ StellarLedgerApi.prototype.getPublicKey_async = function(path, validateKeypair, 
     });
 };
 
-StellarLedgerApi.prototype.signTx_async = function(path, publicKey, transaction) {
+StellarLedgerApi.prototype.signTx_async = function(path, transaction) {
     checkStellarBip32Path(path);
     validateIsSingleStellarPaymentTx(transaction);
 
@@ -123,7 +123,7 @@ StellarLedgerApi.prototype.signTx_async = function(path, publicKey, transaction)
         buffer[4] = 1 + splitPath.length * 4 + signatureBase.length;
         buffer = Buffer.concat([buffer, signatureBase]);
         apdus.push(buffer.toString('hex'));
-    } else { // we need to send the multiple apdus to transmit the entire transaction
+    } else { // we need to send multiple apdus to transmit the entire transaction
         buffer[3] = P2_MORE_APDU;
         buffer[4] = 1 + splitPath.length * 4 + chunkSize;
         var chunk = Buffer.alloc(chunkSize);
@@ -167,9 +167,8 @@ StellarLedgerApi.prototype.signTx_async = function(path, publicKey, transaction)
     });
 };
 
-StellarLedgerApi.prototype.signTxHash_async = function(path, publicKey, transaction) {
+StellarLedgerApi.prototype.signTxHash_async = function(path, txHash) {
     checkStellarBip32Path(path);
-	var txHash = transaction.hash();
     var splitPath = utils.splitPath(path);
     var buffer = Buffer.alloc(5 + 1 + splitPath.length * 4);
     buffer[0] = CLA;
@@ -200,7 +199,7 @@ StellarLedgerApi.prototype.addDeviceListener = function(listener) {
     }
     this.listeners.push(listener);
     if (!this.monitoring) {
-        monitorDevice(this);
+        monitorDevice.call(this);
         this.monitoring = true;
     }
 };
@@ -222,30 +221,31 @@ StellarLedgerApi.prototype.clearDeviceListeners = function() {
     this.listeners = [];
 };
 
-function notifyListeners(api, status, msg) {
-    if (api.status !== status) {
-        api.status = status;
-        api.listeners.forEach(function(listener) {
+function notifyListeners(status, msg) {
+    if (this.status !== status) {
+        this.status = status;
+        this.listeners.forEach(function(listener) {
             listener(status, msg);
         });
     }
 }
 
-function monitorDevice(api) {
-    if (api.listeners.length === 0) {
-        api.monitoring = false;
+function monitorDevice() {
+    if (this.listeners.length === 0) {
+        this.monitoring = false;
         return;
     }
-    api.getAppConfiguration_async().then(function () {
-        notifyListeners(api, 'Connected');
-        setTimeout(monitorDevice.bind(null, api), api.monitoringInterval);
+    var self = this;
+    this.getAppConfiguration_async().then(function () {
+        notifyListeners.call(self, 'Connected');
+        setTimeout(monitorDevice.bind(self), self.monitoringInterval);
     }).catch(function (err) {
         if (err.errorCode === 5) {
-            notifyListeners(api, 'Timeout');
-            monitorDevice(api);
+            notifyListeners.call(self, 'Timeout');
+            monitorDevice.call(self);
         } else {
-            notifyListeners(api, 'Error', err);
-            setTimeout(monitorDevice.bind(null, api), api.monitoringInterval);
+            notifyListeners.call(self, 'Error', err);
+            setTimeout(monitorDevice.bind(self), self.monitoringInterval);
         }
     });
 }

@@ -4,7 +4,7 @@ Javascript library for communicating with ledger-app-stellar
 
 This is the companion javascript library for communicating with the [Ledger Nano S Stellar App](https://github.com/lenondupe/ledger-app-stellar).
 
-It is currently work in progress. In order to run the tests you must have the [Ledger Nano S Stellar App](https://github.com/lenondupe/ledger-app-stellar) installed on your [Ledger Nano S](https://www.ledgerwallet.com/products/ledger-nano-s).
+In order to run the tests you must have the [Ledger Nano S Stellar App](https://github.com/lenondupe/ledger-app-stellar) installed on your [Ledger Nano S](https://www.ledgerwallet.com/products/ledger-nano-s).
 
 ## Building
 
@@ -82,7 +82,7 @@ var publicKey = ...;
 StellarLedger.comm.create_async().then(function(comm) {
   var api = new StellarLedger.Api(comm);
   
-  return api.signTx_async(bip32Path, publicKey, transaction).then(function (result) {
+  return api.signTx_async(bip32Path, transaction).then(function (result) {
       var signature = result['signature'];
       // add the signature to the transaction
       addSignatureToTransaction(signature, transaction);
@@ -97,7 +97,7 @@ StellarLedger.comm.create_async().then(function(comm) {
 StellarLedger.comm.create_async().then(function(comm) {
   var api = new StellarLedger.Api(comm);
   
-  return api.signTxHash_async(bip32Path, publicKey, transaction).then(function (result) {
+  return api.signTxHash_async(bip32Path, transaction.hash()).then(function (result) {
       var signature = result['signature'];
       addSignatureToTransaction(signature, transaction);
       ...

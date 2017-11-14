@@ -22,7 +22,7 @@ var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 var bip32Path = "44'/148'/0'";
 var destination = "GBGBTCCP7WG2E5XFYLQFJP2DYOQZPCCDCHK62K6TZD4BHMNYI5WSXESH";
 
-var timeout = 90;
+var timeout = 0;
 var debug = true;
 
 StellarSdk.Network.useTestNetwork();
@@ -38,7 +38,7 @@ function runTest(comm, Api) {
             var publicKey = result['publicKey'];
             return loadAccount(publicKey).then(function (account) {
                 var tx = createTransaction(account);
-                return api.signTx_async(bip32Path, publicKey, tx).then(function (result) {
+                return api.signTx_async(bip32Path, tx).then(function (result) {
                     var txHash = tx.hash();
                     var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
                     if (keyPair.verify(txHash, result['signature'])) {

@@ -38,7 +38,7 @@ function runTest(comm, Api) {
             var publicKey = result['publicKey'];
             return loadAccount(publicKey).then(function (account) {
                 var tx = createTransaction(account);
-                return api.signTxHash_async(bip32Path, publicKey, tx).then(function (result) {
+                return api.signTxHash_async(bip32Path, tx.hash()).then(function (result) {
                     var txHash = tx.hash();
                     var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
                     if (keyPair.verify(txHash, result['signature'])) {
