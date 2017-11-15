@@ -234,7 +234,8 @@ function notifyListeners(status, msg) {
 }
 
 function monitorDevice() {
-    if (!this.monitoring) {
+    if (this.stopMonitor) {
+        this.monitoring = false;
         return;
     }
     if (this.listeners.length === 0) {
@@ -257,14 +258,15 @@ function monitorDevice() {
 };
 
 function startMonitor() {
+    this.stopMonitor = false;
     if (!this.monitoring) {
-        this.monitoring = true;
         monitorDevice.call(this);
+        this.monitoring = true;
     }
 }
 
 function stopMonitor() {
-    this.monitoring = false;
+    this.stopMonitor = true;
 }
 
 function validateIsSingleStellarPaymentTx(transaction) {
