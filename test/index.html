@@ -44,9 +44,13 @@
             document.getElementById('script').disabled = disabled;
             document.getElementById('runScript').disabled = disabled;
         }
+        function init() {
+            onTimeout();
+            connect();
+        }
     </script>
 </head>
-<body onload="onTimeout();connect();" onunload="disconnect()">
+<body onload="init();" onunload="disconnect()">
 <div id="msg"></div>
 <div id="form">
     <select id="script" disabled>

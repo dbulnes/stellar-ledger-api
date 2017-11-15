@@ -42,7 +42,11 @@ var StellarLedgerApi = function(comm, config) {
     this.comm.setScrambleKey('l0v');
     this.listeners = [];
     this.status = 'None';
-    this.monitoringInterval = config.monitoringInterval || MONITORING_INTERVAL_DEFAULT;
+    this.monitoringIntervalSeconds = config.monitoringIntervalSeconds || MONITORING_INTERVAL_DEFAULT;
+    if (typeof window !== 'undefined') {
+        window.onblur = stopMonitor.bind(this);
+        window.onfocus = startMonitor.bind(this);
+    }
 };
 
 StellarLedgerApi.prototype.getAppConfiguration_async = function() {
@@ -199,8 +203,7 @@ StellarLedgerApi.prototype.addDeviceListener = function(listener) {
     }
     this.listeners.push(listener);
     if (!this.monitoring) {
-        monitorDevice.call(this);
-        this.monitoring = true;
+        startMonitor.call(this);
     }
 };
 
@@ -212,7 +215,7 @@ StellarLedgerApi.prototype.removeDeviceListener = function(listener) {
     if (index !== -1) {
         this.listeners.splice(index, 1);
     }
-}
+};
 
 StellarLedgerApi.prototype.clearDeviceListeners = function() {
     if (typeof window === 'undefined') {
@@ -231,23 +234,37 @@ function notifyListeners(status, msg) {
 }
 
 function monitorDevice() {
+    if (!this.monitoring) {
+        return;
+    }
     if (this.listeners.length === 0) {
-        this.monitoring = false;
+        stopMonitor.call(this);
         return;
     }
     var self = this;
     this.getAppConfiguration_async().then(function () {
         notifyListeners.call(self, 'Connected');
-        setTimeout(monitorDevice.bind(self), self.monitoringInterval);
+        setTimeout(monitorDevice.bind(self), self.monitoringIntervalSeconds * 1000);
     }).catch(function (err) {
         if (err.errorCode === 5) {
             notifyListeners.call(self, 'Timeout');
             monitorDevice.call(self);
         } else {
             notifyListeners.call(self, 'Error', err);
-            setTimeout(monitorDevice.bind(self), self.monitoringInterval);
+            setTimeout(monitorDevice.bind(self), self.monitoringIntervalSeconds * 1000);
         }
     });
+};
+
+function startMonitor() {
+    if (!this.monitoring) {
+        this.monitoring = true;
+        monitorDevice.call(this);
+    }
+}
+
+function stopMonitor() {
+    this.monitoring = false;
 }
 
 function validateIsSingleStellarPaymentTx(transaction) {
