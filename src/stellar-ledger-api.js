@@ -234,12 +234,7 @@ function notifyListeners(status, msg) {
 }
 
 function monitorDevice() {
-    if (this.stopMonitor) {
-        this.monitoring = false;
-        return;
-    }
-    if (this.listeners.length === 0) {
-        stopMonitor.call(this);
+    if (this.stopMonitor || this.listeners.length === 0) {
         this.monitoring = false;
         return;
     }
