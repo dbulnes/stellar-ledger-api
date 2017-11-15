@@ -240,6 +240,7 @@ function monitorDevice() {
     }
     if (this.listeners.length === 0) {
         stopMonitor.call(this);
+        this.monitoring = false;
         return;
     }
     var self = this;
@@ -260,8 +261,8 @@ function monitorDevice() {
 function startMonitor() {
     this.stopMonitor = false;
     if (!this.monitoring) {
-        monitorDevice.call(this);
         this.monitoring = true;
+        monitorDevice.call(this);
     }
 }
 
