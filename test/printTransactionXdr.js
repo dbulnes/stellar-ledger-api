@@ -29,12 +29,31 @@ function loadAccount(publicKey) {
 }
 
 function createTransaction(account) {
+  return createManageOfferTransaction(account);
+}
+
+function createManageOfferTransaction(account) {
+    var buying = new StellarSdk.Asset("DUPE", publicKey);
+    var selling = StellarSdk.Asset.native();
     return new StellarSdk.TransactionBuilder(account)
-        .addOperation(StellarSdk.Operation.payment({
-            destination: destination,
-            asset: StellarSdk.Asset.native(),
-            amount: "30"
-        })).addMemo(StellarSdk.Memo.text("starlight"))
+        .addOperation(StellarSdk.Operation.manageOffer({
+            buying: buying,
+            selling: selling,
+            amount: "300",
+            price: {
+              n: 1,
+              d: 3
+            }
+        }))
+        .build();
+}
+
+function createChangeTrustTransaction(account) {
+    var asset = new StellarSdk.Asset("DUPE", publicKey);
+    return new StellarSdk.TransactionBuilder(account)
+        .addOperation(StellarSdk.Operation.changeTrust({
+            asset: asset
+        }))
         .build();
 }
 

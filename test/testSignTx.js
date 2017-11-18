@@ -37,7 +37,7 @@ function runTest(comm, Api) {
         return api.getPublicKey_async(bip32Path).then(function (result) {
             var publicKey = result['publicKey'];
             return loadAccount(publicKey).then(function (account) {
-                var tx = createTransaction(account);
+                var tx = createAddTrustTransaction(account, publicKey);
                 return api.signTx_async(bip32Path, tx).then(function (result) {
                     var txHash = tx.hash();
                     var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
@@ -60,7 +60,7 @@ function loadAccount(publicKey) {
     return server.loadAccount(publicKey);
 }
 
-function createTransaction(account) {
+function createPaymentTransaction(account) {
     return new StellarSdk.TransactionBuilder(account)
         .addOperation(StellarSdk.Operation.payment({
             destination: destination,
@@ -70,13 +70,72 @@ function createTransaction(account) {
         .build();
 }
 
+function createCreateOfferTransaction(account, publicKey) {
+  var buying = new StellarSdk.Asset("DUPE", publicKey);
+  var selling = StellarSdk.Asset.native();
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.manageOffer({
+      buying: buying,
+      selling: selling,
+      amount: "300",
+      price: { n: 1, d: 3 }
+    }))
+    .build();
+}
+
+function createDeleteOfferTransaction(account, publicKey) {
+  var buying = new StellarSdk.Asset("DUPE", publicKey);
+  var selling = StellarSdk.Asset.native();
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.manageOffer({
+      buying: buying,
+      selling: selling,
+      amount: "0",
+      price: { n: 1, d: 3 },
+      offerId: '2'
+    }))
+    .build();
+}
+
+function createChangeOfferTransaction(account, publicKey) {
+  var buying = new StellarSdk.Asset("DUPE", publicKey);
+  var selling = StellarSdk.Asset.native();
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.manageOffer({
+      buying: buying,
+      selling: selling,
+      amount: "200",
+      price: { n: 1, d: 3 },
+      offerId: '2'
+    }))
+    .build();
+}
+
+function createAddTrustTransaction(account, publicKey) {
+  var asset = new StellarSdk.Asset("DUPE", publicKey);
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.changeTrust({
+      asset: asset
+    }))
+    .build();
+}
+
+function createRemoveTrustTransaction(account, publicKey) {
+  var asset = new StellarSdk.Asset("DUPE", publicKey);
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.changeTrust({
+      asset: asset,
+      limit: '0'
+    }))
+    .build();
+}
+
 function addSignatureToTransaction(publicKey, signature, transaction) {
     var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
     var hint = keyPair.signatureHint();
     var decorated = new StellarSdk.xdr.DecoratedSignature({hint: hint, signature: signature});
     transaction.signatures.push(decorated);
 }
-
 
 function sendTransaction(transaction) {
     server.submitTransaction(transaction)
