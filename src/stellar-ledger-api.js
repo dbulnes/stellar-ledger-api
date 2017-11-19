@@ -34,19 +34,9 @@ const P2_MORE_APDU = 0x80;
 const SW_OK = 0x9000;
 const SW_CANCEL = 0x6985;
 
-const MONITORING_INTERVAL_DEFAULT = 3;
-
 var StellarLedgerApi = function(comm, config) {
     this.comm = comm;
-    config = config || {};
     this.comm.setScrambleKey('l0v');
-    this.listeners = [];
-    this.status = 'None';
-    this.monitoringIntervalSeconds = config.monitoringIntervalSeconds || MONITORING_INTERVAL_DEFAULT;
-    if (typeof window !== 'undefined') {
-        window.onblur = stopMonitor.bind(this);
-        window.onfocus = startMonitor.bind(this);
-    }
 };
 
 StellarLedgerApi.prototype.getAppConfiguration_async = function() {
@@ -197,72 +187,16 @@ StellarLedgerApi.prototype.signTxHash_async = function(path, txHash) {
     });
 };
 
-StellarLedgerApi.prototype.addDeviceListener = function(listener) {
-    if (typeof window === 'undefined') {
-        throw new Error('This function is not available for node-hid');
-    }
-    this.listeners.push(listener);
-    if (!this.monitoring) {
-        startMonitor.call(this);
-    }
-};
-
-StellarLedgerApi.prototype.removeDeviceListener = function(listener) {
-    if (typeof window === 'undefined') {
-        throw new Error('This function is not available for node-hid');
-    }
-    var index = this.listeners.indexOf(listener);
-    if (index !== -1) {
-        this.listeners.splice(index, 1);
-    }
-};
-
-StellarLedgerApi.prototype.clearDeviceListeners = function() {
-    if (typeof window === 'undefined') {
-        throw new Error('This function is not available for node-hid');
-    }
-    this.listeners = [];
-};
-
-function notifyListeners(status, msg) {
-    if (this.status !== status) {
-        this.status = status;
-        this.listeners.forEach(function(listener) {
-            listener(status, msg);
-        });
-    }
-}
-
-function monitorDevice() {
-    if (this.stopMonitor || this.listeners.length === 0) {
-        this.monitoring = false;
-        return;
-    }
-    var self = this;
-    this.getAppConfiguration_async().then(function () {
-        notifyListeners.call(self, 'Connected');
-        setTimeout(monitorDevice.bind(self), self.monitoringIntervalSeconds * 1000);
-    }).catch(function (err) {
-        if (err.errorCode === 5) {
-            notifyListeners.call(self, 'Timeout');
-            monitorDevice.call(self);
-        } else {
-            notifyListeners.call(self, 'Error', err);
-            setTimeout(monitorDevice.bind(self), self.monitoringIntervalSeconds * 1000);
-        }
+StellarLedgerApi.prototype.connect = function(success, error) {
+  var self = this;
+  this.getAppConfiguration_async().then(success)
+    .catch(function (err) {
+      if (err.errorCode === 5) { // Timeout, try again
+        self.connect(success);
+      } else {
+        error(err);
+      }
     });
-};
-
-function startMonitor() {
-    this.stopMonitor = false;
-    if (!this.monitoring) {
-        this.monitoring = true;
-        monitorDevice.call(this);
-    }
-}
-
-function stopMonitor() {
-    this.stopMonitor = true;
 }
 
 function validateIsSingleStellarPaymentTx(transaction) {
