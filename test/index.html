@@ -3,39 +3,21 @@
     <script src="../browser/stellar-ledger-api.js"></script>
     <script src="runScript-browser.js"></script>
     <script>
-        var ledgerApi;
         function selectAndRun() {
             var select = document.getElementById('script');
             var script = select.options[select.selectedIndex].text;
             runScript(script);
         }
         function connect() {
-            ledgerApi = new StellarLedger.Api(new StellarLedger.comm(3));
-            ledgerApi.addDeviceListener(deviceListener);
-        }
-        function disconnect() {
-            ledgerApi.clearDeviceListeners();
-        }
-        function deviceListener(status, msg) {
-            if (status === 'Connected') {
-                onConnect();
-            } else if (status === 'Timeout') {
-                onTimeout();
-            } else if (status === 'Error') {
-                onError(msg);
-            }
-        }
-        function onTimeout() {
-            displayMesage('Connect your Ledger and open the Stellar App');
-            setFormDisabled(true);
+            displayMesage('Connect your Ledger');
+            new StellarLedger.Api(new StellarLedger.comm(20)).connect(onConnect, onError);
         }
         function onConnect() {
-            displayMesage('Ledger Connected');
+            displayMesage('Connected');
             setFormDisabled(false);
         }
-        function onError(msg) {
-            displayMesage('Error connecting: ' + msg);
-            setFormDisabled(true);
+        function onError(err) {
+            displayMesage('Error: ' + err);
         }
         function displayMesage(msg) {
             document.getElementById('msg').innerHTML = msg;
@@ -44,13 +26,9 @@
             document.getElementById('script').disabled = disabled;
             document.getElementById('runScript').disabled = disabled;
         }
-        function init() {
-            onTimeout();
-            connect();
-        }
     </script>
 </head>
-<body onload="init();" onunload="disconnect()">
+<body onload="connect();">
 <div id="msg"></div>
 <div id="form">
     <select id="script" disabled>
