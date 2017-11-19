@@ -205,7 +205,7 @@ function validateIsSingleStellarPaymentTx(transaction) {
             ' Use signTxHash_async for other types of transaction');
     }
     var operation = transaction.operations[0];
-    if (operation.type !== 'payment' && operation.type !== 'changeTrust' && operation.type !== 'manageOffer') {
+    if (operation.type !== 'payment' && operation.type !== 'changeTrust' && operation.type !== 'manageOffer' && operation.type !== 'createAccount') {
         throw new Error('Method signTx_async only allows operations of type \'payment\', \'changeTrust\' and \'manageOffer\'.' +
             ' Found: ' + operation.type + '. Use signTxHash_async for this type of transaction');
     }
