@@ -29,12 +29,15 @@ function loadAccount(publicKey) {
 }
 
 function createTransaction(account) {
+  return createAccountTx(account);
+}
+
+function createAccountTx(account) {
     return new StellarSdk.TransactionBuilder(account)
-        .addOperation(StellarSdk.Operation.payment({
+        .addOperation(StellarSdk.Operation.createAccount({
             destination: destination,
-            asset: StellarSdk.Asset.native(),
-            amount: "30"
-        })).addMemo(StellarSdk.Memo.text("starlight"))
+            startingBalance: "100"
+        }))
         .build();
 }
 

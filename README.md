@@ -74,7 +74,7 @@ StellarLedger.comm.create_async().then(function(comm) {
   });
 });
 
-/** Case 2: signing a single payment transaction */
+/** Case 2: signing a single createAccount, payment, manageOffer, or changeTrust transaction */
 
 var transaction = ...;
 var publicKey = ...;
@@ -92,7 +92,7 @@ StellarLedger.comm.create_async().then(function(comm) {
   });
 });
 
-/** Case 3: signing an arbitrary transaction */
+/** Case 3: signing other arbitrary transactions */
 
 StellarLedger.comm.create_async().then(function(comm) {
   var api = new StellarLedger.Api(comm);
