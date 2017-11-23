@@ -60,7 +60,16 @@ Then open https://localhost:4443/test/index.html to run the tests
 var StellarLedger = require('stellar-ledger-api');
 var bip32Path = "44'/148'/0'";
 
-/** Case 1: obtaining the public key */
+/** Case 1: checking the device connection */
+
+// wait for the device to become connected and the Stellar app to open
+// uses function callbacks to notify when the connection is established or when an error occurred while connecting
+StellarLedger.comm.create_async().then(function(comm) {
+  var api = new StellarLedger.Api(comm);
+  api.connect(function() { console.log('connected'); } , function(err) { console.error(err); });
+});
+
+/** Case 2: obtaining the public key */
 
 // initialize the communication link - this is the common pattern for all operations
 StellarLedger.comm.create_async().then(function(comm) {
@@ -74,7 +83,7 @@ StellarLedger.comm.create_async().then(function(comm) {
   });
 });
 
-/** Case 2: signing a single createAccount, payment, manageOffer, or changeTrust transaction */
+/** Case 3: signing a transaction */
 
 var transaction = ...;
 var publicKey = ...;
@@ -85,20 +94,6 @@ StellarLedger.comm.create_async().then(function(comm) {
   return api.signTx_async(bip32Path, transaction).then(function (result) {
       var signature = result['signature'];
       // add the signature to the transaction
-      addSignatureToTransaction(signature, transaction);
-      ...
-  }).catch(function (err) {
-      console.error(err);
-  });
-});
-
-/** Case 3: signing other arbitrary transactions */
-
-StellarLedger.comm.create_async().then(function(comm) {
-  var api = new StellarLedger.Api(comm);
-  
-  return api.signTxHash_async(bip32Path, transaction.hash()).then(function (result) {
-      var signature = result['signature'];
       addSignatureToTransaction(signature, transaction);
       ...
   }).catch(function (err) {

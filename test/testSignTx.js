@@ -37,13 +37,14 @@ function runTest(comm, Api) {
         return api.getPublicKey_async(bip32Path).then(function (result) {
             var publicKey = result['publicKey'];
             return loadAccount(publicKey).then(function (account) {
-                // sign(api, publicKey, createAccountTx(account, publicKey));
+                sign(api, publicKey, createAccountTx(account, publicKey));
                 // sign(api, publicKey, paymentTx(account, publicKey));
                 // sign(api, publicKey, addTrustTx(account, publicKey));
                 // sign(api, publicKey, removeTrustTx(account, publicKey));
                 // sign(api, publicKey, createOfferTx(account, publicKey));
                 // sign(api, publicKey, deleteOfferTx(account, publicKey));
-                sign(api, publicKey, changeOfferTx(account, publicKey));
+                // sign(api, publicKey, changeOfferTx(account, publicKey));
+                // sign(api, publicKey, setOptions(account));
             });
         });
     });
@@ -143,6 +144,14 @@ function removeTrustTx(account, publicKey) {
     .addOperation(StellarSdk.Operation.changeTrust({
       asset: asset,
       limit: '0'
+    }))
+    .build();
+}
+
+function setOptions(account) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.setOptions({
+      inflationDest: 'GBGBTCCP7WG2E5XFYLQFJP2DYOQZPCCDCHK62K6TZD4BHMNYI5WSXESH'
     }))
     .build();
 }

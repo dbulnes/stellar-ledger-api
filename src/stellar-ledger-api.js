@@ -92,7 +92,10 @@ StellarLedgerApi.prototype.getPublicKey_async = function(path, validateKeypair, 
 
 StellarLedgerApi.prototype.signTx_async = function(path, transaction) {
     checkStellarBip32Path(path);
-    validateIsSingleStellarPaymentTx(transaction);
+
+    if (!isFullXdrSigningSupportedTx(transaction)) {
+      return signTxHash_async_internal.call(this, path, transaction.hash());
+    }
 
     var signatureBase = transaction.signatureBase();
 
@@ -162,29 +165,9 @@ StellarLedgerApi.prototype.signTx_async = function(path, transaction) {
 };
 
 StellarLedgerApi.prototype.signTxHash_async = function(path, txHash) {
+    console.log('signTxHash_async is deprecated; use signTx_async instead');
     checkStellarBip32Path(path);
-    var splitPath = utils.splitPath(path);
-    var buffer = Buffer.alloc(5 + 1 + splitPath.length * 4);
-    buffer[0] = CLA;
-    buffer[1] = INS_SIGN_TX_HASH;
-    buffer[2] = 0x00;
-    buffer[3] = 0x00;
-    buffer[4] = 1 + splitPath.length * 4 + txHash.length;
-    buffer[5] = splitPath.length;
-    splitPath.forEach(function (element, index) {
-        buffer.writeUInt32BE(element, 6 + 4 * index);
-    });
-    buffer = Buffer.concat([buffer, txHash]);
-    return this.comm.exchange(buffer.toString('hex'), [SW_OK, SW_CANCEL]).then(function(response) {
-        var status = Buffer.from(response.slice(response.length - 4), 'hex').readUInt16BE(0);
-        if (status === SW_OK) {
-            var result = {};
-            result['signature'] = Buffer.from(response.slice(0, response.length - 4), 'hex');
-            return result;
-        } else {
-            throw new Error('Transaction approval request was rejected');
-        }
-    });
+    signTxHash_async_internal.call(this, path, txHash);
 };
 
 StellarLedgerApi.prototype.connect = function(success, error) {
@@ -197,18 +180,42 @@ StellarLedgerApi.prototype.connect = function(success, error) {
         error(err);
       }
     });
+};
+
+function signTxHash_async_internal(path, txHash) {
+  var splitPath = utils.splitPath(path);
+  var buffer = Buffer.alloc(5 + 1 + splitPath.length * 4);
+  buffer[0] = CLA;
+  buffer[1] = INS_SIGN_TX_HASH;
+  buffer[2] = 0x00;
+  buffer[3] = 0x00;
+  buffer[4] = 1 + splitPath.length * 4 + txHash.length;
+  buffer[5] = splitPath.length;
+  splitPath.forEach(function (element, index) {
+    buffer.writeUInt32BE(element, 6 + 4 * index);
+  });
+  buffer = Buffer.concat([buffer, txHash]);
+  return this.comm.exchange(buffer.toString('hex'), [SW_OK, SW_CANCEL]).then(function(response) {
+    var status = Buffer.from(response.slice(response.length - 4), 'hex').readUInt16BE(0);
+    if (status === SW_OK) {
+      var result = {};
+      result['signature'] = Buffer.from(response.slice(0, response.length - 4), 'hex');
+      return result;
+    } else {
+      throw new Error('Transaction approval request was rejected');
+    }
+  });
 }
 
-function validateIsSingleStellarPaymentTx(transaction) {
+function isFullXdrSigningSupportedTx(transaction) {
     if (transaction.operations.length > 1) {
-        throw new Error('Method signTx_async only allows a single payment operation per transaction.' +
-            ' Use signTxHash_async for other types of transaction');
+        return false;
     }
     var operation = transaction.operations[0];
     if (operation.type !== 'payment' && operation.type !== 'changeTrust' && operation.type !== 'manageOffer' && operation.type !== 'createAccount') {
-        throw new Error('Method signTx_async only allows operations of type \'payment\', \'changeTrust\' and \'manageOffer\'.' +
-            ' Found: ' + operation.type + '. Use signTxHash_async for this type of transaction');
+        return false;
     }
+    return true;
 }
 
 function checkStellarBip32Path(path) {
