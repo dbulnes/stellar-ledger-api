@@ -175,7 +175,11 @@ StellarLedgerApi.prototype.connect = function(success, error) {
   this.getAppConfiguration_async().then(success)
     .catch(function (err) {
       if (err.errorCode === 5) { // Timeout, try again
-        self.connect(success);
+        try {
+          self.connect(success);
+        } catch (e) {
+          error(e); // possible call stack overflow
+        }
       } else {
         error(err);
       }
