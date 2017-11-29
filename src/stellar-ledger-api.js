@@ -34,7 +34,7 @@ const P2_MORE_APDU = 0x80;
 const SW_OK = 0x9000;
 const SW_CANCEL = 0x6985;
 
-var StellarLedgerApi = function(comm, config) {
+var StellarLedgerApi = function(comm) {
     this.comm = comm;
     this.comm.setScrambleKey('l0v');
 };
@@ -171,19 +171,8 @@ StellarLedgerApi.prototype.signTxHash_async = function(path, txHash) {
 };
 
 StellarLedgerApi.prototype.connect = function(success, error) {
-  var self = this;
   this.getAppConfiguration_async().then(success)
-    .catch(function (err) {
-      if (err.errorCode === 5) { // Timeout, try again
-        try {
-          self.connect(success);
-        } catch (e) {
-          error(e); // possible call stack overflow
-        }
-      } else {
-        error(err);
-      }
-    });
+    .catch(function (err) { error(err); });
 };
 
 function signTxHash_async_internal(path, txHash) {

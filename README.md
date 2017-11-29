@@ -60,18 +60,24 @@ Then open https://localhost:4443/test/index.html to run the tests
 var StellarLedger = require('stellar-ledger-api');
 var bip32Path = "44'/148'/0'";
 
-/** Case 1: checking the device connection */
+/** Case 1: wait for the device connection */
 
 // wait for the device to become connected and the Stellar app to open
 // uses function callbacks to notify when the connection is established or when an error occurred while connecting
-StellarLedger.comm.create_async().then(function(comm) {
+
+// NodeJs code:
+StellarLedger.comm.create_async(Number.MAX_VALUE).then(function(comm) {
   var api = new StellarLedger.Api(comm);
   api.connect(function() { console.log('connected'); } , function(err) { console.error(err); });
 });
 
+// Browser code:
+new StellarLedger.Api(new StellarLedger.comm(Number.MAX_VALUE)).connect(
+  function() { console.log('connected'); }, function(err) { console.error(err) }
+);
+
 /** Case 2: obtaining the public key */
 
-// initialize the communication link - this is the common pattern for all operations
 StellarLedger.comm.create_async().then(function(comm) {
   var api = new StellarLedger.Api(comm);
   // get the public key for this bip32 path
@@ -83,11 +89,13 @@ StellarLedger.comm.create_async().then(function(comm) {
   });
 });
 
+
 /** Case 3: signing a transaction */
 
 var transaction = ...;
 var publicKey = ...;
 
+// default timeout is 20 seconds. if you want to customise this follow the patterns used in Case 1
 StellarLedger.comm.create_async().then(function(comm) {
   var api = new StellarLedger.Api(comm);
   

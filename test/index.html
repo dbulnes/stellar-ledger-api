@@ -10,7 +10,7 @@
         }
         function connect() {
             displayMesage('Connect your Ledger');
-            new StellarLedger.Api(new StellarLedger.comm(20)).connect(onConnect, onError);
+            new StellarLedger.Api(new StellarLedger.comm(Number.MAX_VALUE)).connect(onConnect, onError);
         }
         function onConnect() {
             displayMesage('Connected');
