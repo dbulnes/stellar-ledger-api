@@ -167,7 +167,7 @@ StellarLedgerApi.prototype.signTx_async = function(path, transaction) {
 StellarLedgerApi.prototype.signTxHash_async = function(path, txHash) {
     console.log('signTxHash_async is deprecated; use signTx_async instead');
     checkStellarBip32Path(path);
-    signTxHash_async_internal.call(this, path, txHash);
+    return signTxHash_async_internal.call(this, path, txHash);
 };
 
 StellarLedgerApi.prototype.connect = function(success, error) {
