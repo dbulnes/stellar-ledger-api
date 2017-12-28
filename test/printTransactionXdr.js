@@ -29,7 +29,50 @@ function loadAccount(publicKey) {
 }
 
 function createTransaction(account) {
-  return createAccountTx(account);
+  return allowTrustTx(account);
+  // return manageDataTx(account);
+  // return accountMergeTx(account);
+  // return pathPaymentTx(account, publicKey);
+  // return createAccountTx(account);
+}
+
+function pathPaymentTx(account, publicKey) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.pathPayment({
+      destination: destination,
+      sendAsset: new StellarSdk.Asset("USD", publicKey),
+      sendMax: "50",
+      destAsset: new StellarSdk.Asset("NGN", publicKey),
+      destAmount: "18000"
+    })).addMemo(StellarSdk.Memo.text("dollar to naira"))
+    .build();
+}
+
+function accountMergeTx(account) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.accountMerge({
+      destination: destination
+    })).addMemo(StellarSdk.Memo.text("merge account"))
+    .build();
+}
+
+function manageDataTx(account) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.manageData({
+      name: "name",
+      value: "value"
+    })).addMemo(StellarSdk.Memo.text("manage data"))
+    .build();
+}
+
+function allowTrustTx(account) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.allowTrust({
+      trustor: destination,
+      assetCode: "JPY",
+      authorize: true
+    })).addMemo(StellarSdk.Memo.text("allow trust"))
+    .build();
 }
 
 function createAccountTx(account) {
