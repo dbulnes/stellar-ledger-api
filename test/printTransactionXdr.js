@@ -29,7 +29,8 @@ function loadAccount(publicKey) {
 }
 
 function createTransaction(account) {
-  return allowTrustTx(account);
+  return setOptionsTx(account);
+  // return allowTrustTx(account);
   // return manageDataTx(account);
   // return accountMergeTx(account);
   // return pathPaymentTx(account, publicKey);
@@ -82,6 +83,22 @@ function createAccountTx(account) {
             startingBalance: "100"
         }))
         .build();
+}
+
+function setOptionsTx(account) {
+  var opts = {};
+  opts.inflationDest = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7";
+  opts.setFlags = StellarSdk.AuthRequiredFlag;
+  opts.lowThreshold = 1;
+  opts.highThreshold = 3;
+
+  opts.signer = {
+    ed25519PublicKey: "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7",
+    weight: 1
+  };
+  opts.homeDomain = "www.example.com";
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.setOptions(opts)).build();
 }
 
 function printHexBlocks(buffer) {

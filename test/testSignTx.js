@@ -39,7 +39,7 @@ function runTest(comm, Api) {
             return loadAccount(publicKey).then(function (account) {
                 // sign(api, publicKey, createAccountTx(account, publicKey));
                 // sign(api, publicKey, paymentTx(account, publicKey));
-                sign(api, publicKey, pathPaymentTx(account, publicKey));
+                // sign(api, publicKey, pathPaymentTx(account, publicKey));
                 // sign(api, publicKey, changeTrustTx(account, publicKey));
                 // sign(api, publicKey, removeTrustTx(account, publicKey));
                 // sign(api, publicKey, allowTrustTx(account, publicKey));
@@ -47,9 +47,10 @@ function runTest(comm, Api) {
                 // sign(api, publicKey, createOfferTx(account, publicKey));
                 // sign(api, publicKey, removeOfferTx(account, publicKey));
                 // sign(api, publicKey, changeOfferTx(account, publicKey));
-                // sign(api, publicKey, setOptionsTx(account));
+                sign(api, publicKey, setOptionsTx(account));
                 // sign(api, publicKey, accountMergeTx(account));
                 // sign(api, publicKey, manageDataTx(account));
+                // sign(api, publicKey, inflationTx(account));
             });
         });
     });
@@ -188,11 +189,22 @@ function revokeTrustTx(account) {
 }
 
 function setOptionsTx(account) {
+  var opts = {};
+  opts.inflationDest = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7";
+  opts.clearFlags = StellarSdk.AuthRevocableFlag | StellarSdk.AuthImmutableFlag;
+  opts.setFlags = StellarSdk.AuthRequiredFlag;
+  opts.masterWeight = 0;
+  opts.lowThreshold = 1;
+  opts.medThreshold = 2;
+  opts.highThreshold = 3;
+
+  opts.signer = {
+    ed25519PublicKey: "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7",
+    weight: 1
+  };
+  opts.homeDomain = "www.example.com";
   return new StellarSdk.TransactionBuilder(account)
-    .addOperation(StellarSdk.Operation.setOptions({
-      inflationDest: 'GA3FUYFOPWZ25YXTCA73RK2UGONHCO27OHQRSGV3VCE67UEPEFEDCOPA'
-    }))
-    .build();
+    .addOperation(StellarSdk.Operation.setOptions(opts)).build();
 }
 
 function accountMergeTx(account) {
@@ -209,6 +221,13 @@ function manageDataTx(account) {
       name: "name",
       value: "value"
     })).addMemo(StellarSdk.Memo.text("manage data"))
+    .build();
+}
+
+function inflationTx(account) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.inflation())
+    .addMemo(StellarSdk.Memo.text("inflation"))
     .build();
 }
 
