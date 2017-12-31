@@ -22,7 +22,7 @@ StellarSdk.Network.useTestNetwork();
 
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org/');
 var destination = "GBMHY2EIEGFHW6G4OIC6QA7I7IUPUDD33PGCJLVC57THODEUQY62KNHD";
-var publicKey = "GBGBTCCP7WG2E5XFYLQFJP2DYOQZPCCDCHK62K6TZD4BHMNYI5WSXESH";
+var publicKey = "GADFVW3UXVKDOU626XUPYDJU2BFCGFJHQ6SREYOZ6IJV4XSHOALEQN2I";
 
 function loadAccount(publicKey) {
     return server.loadAccount(publicKey);
@@ -91,9 +91,11 @@ function setOptionsTx(account) {
   opts.setFlags = StellarSdk.AuthRequiredFlag;
   opts.lowThreshold = 1;
   opts.highThreshold = 3;
-
+  var hash = allowTrustTx(account).hash().toString('hex');
+  console.log('hash: ' + hash);
   opts.signer = {
-    ed25519PublicKey: "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7",
+    // ed25519PublicKey: "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7",
+    sha256Hash: hash,
     weight: 1
   };
   opts.homeDomain = "www.example.com";

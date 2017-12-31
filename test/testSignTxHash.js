@@ -19,7 +19,7 @@ var StellarSdk = require('stellar-sdk');
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
 var bip32Path = "44'/148'/0'";
-var destination = "GBGBTCCP7WG2E5XFYLQFJP2DYOQZPCCDCHK62K6TZD4BHMNYI5WSXESH";
+var destination = "GADFVW3UXVKDOU626XUPYDJU2BFCGFJHQ6SREYOZ6IJV4XSHOALEQN2I";
 
 var timeout = 0;
 var debug = true;
@@ -38,8 +38,9 @@ function runTest(comm, Api) {
             var publicKey = result['publicKey'];
             return loadAccount(publicKey).then(function (account) {
                 var tx = createTransaction(account);
+                var txHash = tx.hash();
+                console.log(txHash.toString('hex'));
                 return api.signTxHash_async(bip32Path, tx.hash()).then(function (result) {
-                    var txHash = tx.hash();
                     var keyPair = StellarSdk.Keypair.fromPublicKey(publicKey);
                     if (keyPair.verify(txHash, result['signature'])) {
                         console.log('Success! Good signature');
