@@ -33,6 +33,7 @@ const P2_MORE_APDU = 0x80;
 
 const SW_OK = 0x9000;
 const SW_CANCEL = 0x6985;
+const SW_UNKNOWN_OP = 0x6c24;
 
 var StellarLedgerApi = function(comm) {
     this.comm = comm;
@@ -147,7 +148,7 @@ StellarLedgerApi.prototype.signTx_async = function(path, transaction) {
         }
     }
     return utils.foreach(apdus, function(apdu) {
-        return self.comm.exchange(apdu, [SW_OK, SW_CANCEL]).then(function(nextResponse) {
+        return self.comm.exchange(apdu, [SW_OK, SW_CANCEL, SW_UNKNOWN_OP]).then(function(nextResponse) {
             response = nextResponse;
         });
     }).then(function() {
@@ -158,6 +159,9 @@ StellarLedgerApi.prototype.signTx_async = function(path, transaction) {
             result['transaction'] = transaction;
             result['signature'] = signature;
             return result;
+        } else if (status === SW_UNKNOWN_OP) {
+            throw new Error('An older version of the Stellar app that does not support this operation was detected. ' +
+              'Please install the latest version of the Stellar app on your device.');
         } else {
             throw new Error('Transaction approval request was rejected');
         }
@@ -201,14 +205,7 @@ function signTxHash_async_internal(path, txHash) {
 }
 
 function isFullXdrSigningSupportedTx(transaction) {
-    if (transaction.operations.length > 1) {
-        return false;
-    }
-    var operation = transaction.operations[0];
-    if (operation.type !== 'payment' && operation.type !== 'changeTrust' && operation.type !== 'manageOffer' && operation.type !== 'createAccount') {
-        return false;
-    }
-    return true;
+    return transaction.operations.length === 1;
 }
 
 function checkStellarBip32Path(path) {

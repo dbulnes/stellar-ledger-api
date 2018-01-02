@@ -22,14 +22,58 @@ StellarSdk.Network.useTestNetwork();
 
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org/');
 var destination = "GBMHY2EIEGFHW6G4OIC6QA7I7IUPUDD33PGCJLVC57THODEUQY62KNHD";
-var publicKey = "GBGBTCCP7WG2E5XFYLQFJP2DYOQZPCCDCHK62K6TZD4BHMNYI5WSXESH";
+var publicKey = "GADFVW3UXVKDOU626XUPYDJU2BFCGFJHQ6SREYOZ6IJV4XSHOALEQN2I";
 
 function loadAccount(publicKey) {
     return server.loadAccount(publicKey);
 }
 
 function createTransaction(account) {
-  return createAccountTx(account);
+  return setOptionsTx(account);
+  // return allowTrustTx(account);
+  // return manageDataTx(account);
+  // return accountMergeTx(account);
+  // return pathPaymentTx(account, publicKey);
+  // return createAccountTx(account);
+}
+
+function pathPaymentTx(account, publicKey) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.pathPayment({
+      destination: destination,
+      sendAsset: new StellarSdk.Asset("USD", publicKey),
+      sendMax: "50",
+      destAsset: new StellarSdk.Asset("NGN", publicKey),
+      destAmount: "18000"
+    })).addMemo(StellarSdk.Memo.text("dollar to naira"))
+    .build();
+}
+
+function accountMergeTx(account) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.accountMerge({
+      destination: destination
+    })).addMemo(StellarSdk.Memo.text("merge account"))
+    .build();
+}
+
+function manageDataTx(account) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.manageData({
+      name: "name",
+      value: "value"
+    })).addMemo(StellarSdk.Memo.text("manage data"))
+    .build();
+}
+
+function allowTrustTx(account) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.allowTrust({
+      trustor: destination,
+      assetCode: "JPY",
+      authorize: true
+    })).addMemo(StellarSdk.Memo.text("allow trust"))
+    .build();
 }
 
 function createAccountTx(account) {
@@ -39,6 +83,24 @@ function createAccountTx(account) {
             startingBalance: "100"
         }))
         .build();
+}
+
+function setOptionsTx(account) {
+  var opts = {};
+  opts.inflationDest = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7";
+  opts.setFlags = StellarSdk.AuthRequiredFlag;
+  opts.lowThreshold = 1;
+  opts.highThreshold = 3;
+  var hash = allowTrustTx(account).hash().toString('hex');
+  console.log('hash: ' + hash);
+  opts.signer = {
+    // ed25519PublicKey: "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7",
+    sha256Hash: hash,
+    weight: 1
+  };
+  opts.homeDomain = "www.example.com";
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.setOptions(opts)).build();
 }
 
 function printHexBlocks(buffer) {

@@ -20,7 +20,7 @@ var fs = require('fs');
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
 var bip32Path = "44'/148'/0'";
-var destination = "GBGBTCCP7WG2E5XFYLQFJP2DYOQZPCCDCHK62K6TZD4BHMNYI5WSXESH";
+var destination = "GADFVW3UXVKDOU626XUPYDJU2BFCGFJHQ6SREYOZ6IJV4XSHOALEQN2I";
 
 var timeout = 0;
 var debug = true;
@@ -37,14 +37,21 @@ function runTest(comm, Api) {
         return api.getPublicKey_async(bip32Path).then(function (result) {
             var publicKey = result['publicKey'];
             return loadAccount(publicKey).then(function (account) {
-                sign(api, publicKey, createAccountTx(account, publicKey));
+                // sign(api, publicKey, createAccountTx(account, publicKey));
                 // sign(api, publicKey, paymentTx(account, publicKey));
-                // sign(api, publicKey, addTrustTx(account, publicKey));
+                // sign(api, publicKey, pathPaymentTx(account, publicKey));
+                // sign(api, publicKey, changeTrustTx(account, publicKey));
                 // sign(api, publicKey, removeTrustTx(account, publicKey));
+                // sign(api, publicKey, allowTrustTx(account, publicKey));
+                // sign(api, publicKey, revokeTrustTx(account, publicKey));
                 // sign(api, publicKey, createOfferTx(account, publicKey));
-                // sign(api, publicKey, deleteOfferTx(account, publicKey));
+                // sign(api, publicKey, removeOfferTx(account, publicKey));
                 // sign(api, publicKey, changeOfferTx(account, publicKey));
-                // sign(api, publicKey, setOptions(account));
+                // sign(api, publicKey, passiveOfferTx(account, publicKey));
+                // sign(api, publicKey, setOptionsTx(account));
+                // sign(api, publicKey, accountMergeTx(account));
+                // sign(api, publicKey, manageDataTx(account));
+                sign(api, publicKey, inflationTx(account));
             });
         });
     });
@@ -59,6 +66,8 @@ function sign(api, publicKey, tx) {
     } else {
       console.error('Failure: Bad signature');
     }
+    // addSignatureToTransaction(publicKey, result['signature'], tx);
+    // sendTransaction(tx);
   }).catch(function (err) {
     console.error(err);
   });
@@ -73,23 +82,36 @@ function createAccountTx(account) {
   return new StellarSdk.TransactionBuilder(account)
     .addOperation(StellarSdk.Operation.createAccount({
       destination: destination,
-      startingBalance: "10"
-    })).addMemo(StellarSdk.Memo.text("create new"))
+      startingBalance: "42949672950"
+    })).addMemo(StellarSdk.Memo.text("create new account"))
     .build();
 }
 
-function paymentTx(account) {
+function paymentTx(account, publicKey) {
+    var asset = new StellarSdk.Asset("LENONDUPEERR", publicKey);
     return new StellarSdk.TransactionBuilder(account)
         .addOperation(StellarSdk.Operation.payment({
             destination: destination,
-            asset: StellarSdk.Asset.native(),
-            amount: "10"
+            asset: asset,
+            amount: "922337203685.4775807"
         })).addMemo(StellarSdk.Memo.text("sending starlight"))
         .build();
 }
 
+function pathPaymentTx(account, publicKey) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.pathPayment({
+      destination: destination,
+      sendAsset: new StellarSdk.Asset("USD", publicKey),
+      sendMax: "922337203685.4775807",
+      destAsset: new StellarSdk.Asset("NGN", publicKey),
+      destAmount: "922337203685.4775807"
+    })).addMemo(StellarSdk.Memo.text("dollar to naira"))
+    .build();
+}
+
 function createOfferTx(account, publicKey) {
-  var buying = new StellarSdk.Asset("DUPE", publicKey);
+  var buying = new StellarSdk.Asset("LENONDUPE", publicKey);
   var selling = StellarSdk.Asset.native();
   return new StellarSdk.TransactionBuilder(account)
     .addOperation(StellarSdk.Operation.manageOffer({
@@ -101,7 +123,7 @@ function createOfferTx(account, publicKey) {
     .build();
 }
 
-function deleteOfferTx(account, publicKey) {
+function removeOfferTx(account, publicKey) {
   var buying = new StellarSdk.Asset("DUPE", publicKey);
   var selling = StellarSdk.Asset.native();
   return new StellarSdk.TransactionBuilder(account)
@@ -129,11 +151,25 @@ function changeOfferTx(account, publicKey) {
     .build();
 }
 
-function addTrustTx(account, publicKey) {
-  var asset = new StellarSdk.Asset("DUPE", publicKey);
+function passiveOfferTx(account, publicKey) {
+  var buying = new StellarSdk.Asset("LENONDUPE", publicKey);
+  var selling = StellarSdk.Asset.native();
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.createPassiveOffer({
+      buying: buying,
+      selling: selling,
+      amount: "300",
+      price: { n: 1, d: 3 }
+    })).addMemo(StellarSdk.Memo.text("create offer"))
+    .build();
+}
+
+function changeTrustTx(account, publicKey) {
+  var asset = new StellarSdk.Asset("LENONDUPEERR", publicKey);
   return new StellarSdk.TransactionBuilder(account)
     .addOperation(StellarSdk.Operation.changeTrust({
-      asset: asset
+      asset: asset,
+      limit: "922337203685.4775806"
     }))
     .build();
 }
@@ -148,11 +184,67 @@ function removeTrustTx(account, publicKey) {
     .build();
 }
 
-function setOptions(account) {
+function allowTrustTx(account) {
   return new StellarSdk.TransactionBuilder(account)
-    .addOperation(StellarSdk.Operation.setOptions({
-      inflationDest: 'GBGBTCCP7WG2E5XFYLQFJP2DYOQZPCCDCHK62K6TZD4BHMNYI5WSXESH'
-    }))
+    .addOperation(StellarSdk.Operation.allowTrust({
+      trustor: destination,
+      assetCode: "JPY",
+      authorize: true
+    })).addMemo(StellarSdk.Memo.text("allow trust"))
+    .build();
+}
+
+function revokeTrustTx(account) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.allowTrust({
+      trustor: destination,
+      assetCode: "JPY",
+      authorize: false
+    })).addMemo(StellarSdk.Memo.text("revoke trust"))
+    .build();
+}
+
+function setOptionsTx(account) {
+  var opts = {};
+  opts.inflationDest = "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7";
+  opts.clearFlags = StellarSdk.AuthRevocableFlag | StellarSdk.AuthImmutableFlag;
+  opts.setFlags = StellarSdk.AuthRequiredFlag;
+  opts.masterWeight = 255;
+  opts.lowThreshold = 255;
+  opts.medThreshold = 255;
+  opts.highThreshold = 255;
+
+  opts.signer = {
+    // ed25519PublicKey: "GDGU5OAPHNPU5UCLE5RDJHG7PXZFQYWKCFOEXSXNMR6KRQRI5T6XXCD7",
+    sha256Hash: revokeTrustTx(account).hash().toString('hex'),
+    weight: 1
+  };
+  opts.homeDomain = "www.longexampleislong.com";
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.setOptions(opts)).build();
+}
+
+function accountMergeTx(account) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.accountMerge({
+      destination: destination
+    })).addMemo(StellarSdk.Memo.text("merge account"))
+    .build();
+}
+
+function manageDataTx(account) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.manageData({
+      name: "name",
+      value: "value"
+    })).addMemo(StellarSdk.Memo.hash(accountMergeTx(account).hash()))
+    .build();
+}
+
+function inflationTx(account) {
+  return new StellarSdk.TransactionBuilder(account)
+    .addOperation(StellarSdk.Operation.inflation())
+    .addMemo(StellarSdk.Memo.text("maximum memo length 28 chars"))
     .build();
 }
 
