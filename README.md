@@ -2,9 +2,9 @@ Javascript library for communicating with ledger-app-stellar
 
 ## Introduction
 
-This is the companion javascript library for communicating with the [Ledger Nano S Stellar App](https://github.com/lenondupe/ledger-app-stellar).
+This is the companion javascript library for communicating with the [Ledger Stellar App](https://github.com/lenondupe/ledger-app-stellar).
 
-In order to run the tests you must have the [Ledger Nano S Stellar App](https://github.com/lenondupe/ledger-app-stellar) installed on your [Ledger Nano S](https://www.ledgerwallet.com/products/ledger-nano-s).
+In order to run the tests you must have the [Ledger Stellar App](https://github.com/lenondupe/ledger-app-stellar) installed on your [Ledger](https://www.ledgerwallet.com/).
 
 ## Building
 
@@ -27,6 +27,12 @@ where `$scriptName` is the name of script file in the `./test` directory minus t
 ```$ npm run script testGetPublicKey```
 
 If the test succeeds you will see your public key printed on the console.
+
+To invoke the signing tests run
+
+```$npm run script testSignTx [operation]```
+
+where operation is one of createAccount, payment, pathPayment, createOffer, removeOffer, changeOffer, passiveOffer, changeTrust, removeTrust, allowTrust, revokeTrust, setOptions, accountMerge, manageData, and inflation
 
 **Note: make sure the Stellar app is open**
 
