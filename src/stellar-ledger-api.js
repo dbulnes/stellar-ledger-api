@@ -1,6 +1,6 @@
 /********************************************************************************
  *   Stellar Ledger API
- *   (c) 2017 LeNonDupe
+ *   (c) 2017 - 2018 LeNonDupe
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ const CLA = 0xe0;
 const INS_GET_PK = 0x02;
 const INS_SIGN_TX = 0x04;
 const INS_GET_CONF = 0x06;
-const INS_SIGN_TX_HASH = 0x08;
 
 const APDU_MAX_SIZE = 150;
 const P1_FIRST_APDU = 0x00;
@@ -94,8 +93,9 @@ StellarLedgerApi.prototype.getPublicKey_async = function(path, validateKeypair, 
 StellarLedgerApi.prototype.signTx_async = function(path, transaction) {
     checkStellarBip32Path(path);
 
-    if (!isFullXdrSigningSupportedTx(transaction)) {
-      return signTxHash_async_internal.call(this, path, transaction.hash());
+    if (transaction.operations.length > 1) {
+        throw new Error('The transaction contains multiple operations. ' +
+            'This is not supported by the Ledger at this time.');
     }
 
     var signatureBase = transaction.signatureBase();
@@ -168,45 +168,14 @@ StellarLedgerApi.prototype.signTx_async = function(path, transaction) {
     });
 };
 
-StellarLedgerApi.prototype.signTxHash_async = function(path, txHash) {
-    console.log('signTxHash_async is deprecated; use signTx_async instead');
-    checkStellarBip32Path(path);
-    return signTxHash_async_internal.call(this, path, txHash);
+StellarLedgerApi.prototype.signTxHash_async = function() {
+    throw new Error('This method of signing transactions was removed. Use signTx_async instead.');
 };
 
 StellarLedgerApi.prototype.connect = function(success, error) {
   this.getAppConfiguration_async().then(success)
     .catch(function (err) { error(err); });
 };
-
-function signTxHash_async_internal(path, txHash) {
-  var splitPath = utils.splitPath(path);
-  var buffer = Buffer.alloc(5 + 1 + splitPath.length * 4);
-  buffer[0] = CLA;
-  buffer[1] = INS_SIGN_TX_HASH;
-  buffer[2] = 0x00;
-  buffer[3] = 0x00;
-  buffer[4] = 1 + splitPath.length * 4 + txHash.length;
-  buffer[5] = splitPath.length;
-  splitPath.forEach(function (element, index) {
-    buffer.writeUInt32BE(element, 6 + 4 * index);
-  });
-  buffer = Buffer.concat([buffer, txHash]);
-  return this.comm.exchange(buffer.toString('hex'), [SW_OK, SW_CANCEL]).then(function(response) {
-    var status = Buffer.from(response.slice(response.length - 4), 'hex').readUInt16BE(0);
-    if (status === SW_OK) {
-      var result = {};
-      result['signature'] = Buffer.from(response.slice(0, response.length - 4), 'hex');
-      return result;
-    } else {
-      throw new Error('Transaction approval request was rejected');
-    }
-  });
-}
-
-function isFullXdrSigningSupportedTx(transaction) {
-    return transaction.operations.length === 1;
-}
 
 function checkStellarBip32Path(path) {
     if (!path.startsWith("44'/148'")) {

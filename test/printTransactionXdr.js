@@ -29,11 +29,11 @@ function loadAccount(publicKey) {
 }
 
 function createTransaction(account) {
-  return setOptionsTx(account);
+  // return setOptionsTx(account);
   // return allowTrustTx(account);
   // return manageDataTx(account);
   // return accountMergeTx(account);
-  // return pathPaymentTx(account, publicKey);
+  return pathPaymentTx(account, publicKey);
   // return createAccountTx(account);
 }
 
@@ -44,7 +44,8 @@ function pathPaymentTx(account, publicKey) {
       sendAsset: new StellarSdk.Asset("USD", publicKey),
       sendMax: "50",
       destAsset: new StellarSdk.Asset("NGN", publicKey),
-      destAmount: "18000"
+      destAmount: "18000",
+      path: [ new StellarSdk.Asset("YEN", publicKey), new StellarSdk.Asset("CAD", publicKey) ]
     })).addMemo(StellarSdk.Memo.text("dollar to naira"))
     .build();
 }

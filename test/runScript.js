@@ -26,16 +26,15 @@ var scripts = {
     testGetAppConfiguration: require('./testGetAppConfiguration'),
     testGetPublicKey: require('./testGetPublicKey'),
     testSignTx: require('./testSignTx'),
-    testSignTxHash: require('./testSignTxHash'),
     printTransactionXdr: require('./printTransactionXdr'),
     showAccount: require('./showAccount'),
     initTestAccount: require('./initTestAccount')
 };
 
-function runScript(scriptName) {
+function runScript(scriptName, operationName) {
     console.log('running: ' + scriptName);
     Q.resolve().then(function () {
-        return scripts[scriptName](StellarLedger.comm, StellarLedger.Api);
+        return scripts[scriptName](StellarLedger.comm, StellarLedger.Api, operationName);
     }).fail(function (err) {
         console.error("failure: " + err);
     });
@@ -44,7 +43,11 @@ function runScript(scriptName) {
 if (!browser) {
     var nodeCmdArgs = process.argv.slice(2);
     var scriptName = nodeCmdArgs[0];
-    runScript(scriptName);
+    var operationName = null;
+    if (nodeCmdArgs.length > 1) {
+        operationName = nodeCmdArgs[1];
+    }
+    runScript(scriptName, operationName);
 }
 
 module.exports = runScript;
