@@ -207,7 +207,7 @@ var operations = {
       .addOperation(StellarSdk.Operation.manageData({
         name: "appdata",
         value: "value"
-      })).addMemo(StellarSdk.Memo.hash(accountMergeTx(account).hash()))
+      })).addMemo(StellarSdk.Memo.hash(this.accountMerge(account).hash()))
       .build();
   },
   inflation: function(account) {
