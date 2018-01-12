@@ -23,6 +23,7 @@ const CLA = 0xe0;
 const INS_GET_PK = 0x02;
 const INS_SIGN_TX = 0x04;
 const INS_GET_CONF = 0x06;
+const INS_SIGN_TX_HASH = 0x08;
 
 const APDU_MAX_SIZE = 150;
 const P1_FIRST_APDU = 0x00;
@@ -160,8 +161,10 @@ StellarLedgerApi.prototype.signTx_async = function(path, transaction) {
             result['signature'] = signature;
             return result;
         } else if (status === SW_UNKNOWN_OP) {
-            throw new Error('An older version of the Stellar app that does not support this operation was detected. ' +
-              'Please install the latest version of the Stellar app on your device.');
+            console.log('Operation unknown to device. ' +
+                'Make sure you have the latest version of the Stellar app on your device.');
+            // fall back on hash signing (pre-2.0)
+            return signTxHash_async_internal.call(self, path, transaction.hash());
         } else {
             throw new Error('Transaction approval request was rejected');
         }
@@ -176,6 +179,32 @@ StellarLedgerApi.prototype.connect = function(success, error) {
   this.getAppConfiguration_async().then(success)
     .catch(function (err) { error(err); });
 };
+
+// deprecated
+function signTxHash_async_internal(path, txHash) {
+  var splitPath = utils.splitPath(path);
+  var buffer = Buffer.alloc(5 + 1 + splitPath.length * 4);
+  buffer[0] = CLA;
+  buffer[1] = INS_SIGN_TX_HASH;
+  buffer[2] = 0x00;
+  buffer[3] = 0x00;
+  buffer[4] = 1 + splitPath.length * 4 + txHash.length;
+  buffer[5] = splitPath.length;
+  splitPath.forEach(function (element, index) {
+    buffer.writeUInt32BE(element, 6 + 4 * index);
+  });
+  buffer = Buffer.concat([buffer, txHash]);
+  return this.comm.exchange(buffer.toString('hex'), [SW_OK, SW_CANCEL]).then(function(response) {
+    var status = Buffer.from(response.slice(response.length - 4), 'hex').readUInt16BE(0);
+    if (status === SW_OK) {
+      var result = {};
+      result['signature'] = Buffer.from(response.slice(0, response.length - 4), 'hex');
+      return result;
+    } else {
+      throw new Error('Transaction approval request was rejected');
+    }
+  });
+}
 
 function checkStellarBip32Path(path) {
     if (!path.startsWith("44'/148'")) {
