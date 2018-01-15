@@ -18,12 +18,16 @@
 var StellarLedger = module.exports;
 
 var ledger = require('ledgerco');
+StellarLedger.comm_node = ledger.comm_node;
+StellarLedger.comm_u2f = ledger.comm_u2f;
+
 var isNode = (typeof window === 'undefined');
 if (isNode) {
-    StellarLedger.comm = ledger.comm_node;
+  StellarLedger.comm = ledger.comm_node;
 } else {
-    StellarLedger.comm = ledger.comm_u2f;
+  StellarLedger.comm = ledger.comm_u2f;
 }
+
 StellarLedger.Api = require('./stellar-ledger-api');
 
 module.exports = StellarLedger;
