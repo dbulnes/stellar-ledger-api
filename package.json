@@ -1,18 +1,19 @@
 {
   "name": "stellar-ledger-api",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Javascript API for communication with the Stellar Ledger App",
   "repository": {
     "type": "git",
     "url": "https://github.com/lenondupe/stellar-ledger-api.git"
   },
   "main": "./src/index.js",
+  "browser": "./src/browser.js",
   "scripts": {
-    "browserify": "browserify --standalone StellarLedger --outfile browser/stellar-ledger-api.js src/index-browserify.js",
-    "browserify-test": "browserify --standalone runScript --outfile test/runScript-browser.js test/runScript.js",
+    "browserify": "browserify --standalone StellarLedger --outfile browser/stellar-ledger-api.js src/browser.js",
+    "browserify-test": "browserify --standalone runScript --exclude stellar-sdk --outfile browser/test.js test/runScriptBrowser.js",
     "uglify": "uglifyjs -o browser/stellar-ledger-api.min.js browser/stellar-ledger-api.js",
-    "script": "node test/runScript.js",
-    "clean": "rm -f browser/stellar-ledger-api.js browser/stellar-ledger-api.min.js test/runScript-browser.js"
+    "script": "node test/runScriptNode.js",
+    "clean": "rm -f browser/stellar-ledger-api.js browser/stellar-ledger-api.min.js browser/test.js"
   },
   "author": "lenondupe@gmail.com",
   "license": "Apache-2.0",

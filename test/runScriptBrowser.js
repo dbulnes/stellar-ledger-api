@@ -1,6 +1,6 @@
 /********************************************************************************
 *   Stellar Ledger API
-*   (c) 2017 LeNonDupe
+*   (c) 2017-2018 LeNonDupe
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -15,20 +15,12 @@
 *  limitations under the License.
 ********************************************************************************/
 
-var browser = (typeof window !== 'undefined');
-
-if (!browser) {
-    StellarLedger = require('../src');
-}
 var Q = require('q');
 
 var scripts = {
     testGetAppConfiguration: require('./testGetAppConfiguration'),
     testGetPublicKey: require('./testGetPublicKey'),
-    testSignTx: require('./testSignTx'),
-    printTransactionXdr: require('./printTransactionXdr'),
-    showAccount: require('./showAccount'),
-    initTestAccount: require('./initTestAccount')
+    testSignTx: require('./testSignTx')
 };
 
 function runScript(scriptName, operationName) {
@@ -38,16 +30,6 @@ function runScript(scriptName, operationName) {
     }).fail(function (err) {
         console.error("failure: " + err);
     });
-}
-
-if (!browser) {
-    var nodeCmdArgs = process.argv.slice(2);
-    var scriptName = nodeCmdArgs[0];
-    var operationName = null;
-    if (nodeCmdArgs.length > 1) {
-        operationName = nodeCmdArgs[1];
-    }
-    runScript(scriptName, operationName);
 }
 
 module.exports = runScript;

@@ -44,7 +44,7 @@ First browserify the library:
 
 ```$ npm run browserify```
 
-This will generate the file `./browser/sledger.js` that contains everything you need to connect with the app in the browser.
+This will generate the file `./browser/stellar-ledger-api.js` that contains everything you need to connect with the app in the browser.
 
 To generate a minified version run:
 

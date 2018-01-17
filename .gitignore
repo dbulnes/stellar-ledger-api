@@ -7,6 +7,6 @@ ledger-js-api
 js-stellar-sdk
 server.pem
 test/sendTransaction.js
-test/runScript-browser.js
 browser/stellar-ledger-api.js
 browser/stellar-ledger-api.min.js
+browser/test.js

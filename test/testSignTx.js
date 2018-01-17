@@ -1,6 +1,6 @@
 /********************************************************************************
 *   Stellar Ledger API
-*   (c) 2017 LeNonDupe
+*   (c) 2017-2018 LeNonDupe
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -14,7 +14,10 @@
 *  See the License for the specific language governing permissions and
 *  limitations under the License.
 ********************************************************************************/
-var StellarSdk = require('stellar-sdk');
+
+if (typeof(StellarSdk) === 'undefined') {
+  StellarSdk = require('stellar-sdk');
+}
 
 var server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
@@ -24,12 +27,7 @@ var destination = "GADFVW3UXVKDOU626XUPYDJU2BFCGFJHQ6SREYOZ6IJV4XSHOALEQN2I";
 var timeout = 0;
 var debug = true;
 
-/**
- * Sign a single payment transaction
- */
 function runTest(comm, Api, operationName) {
-
-    console.log(operationName);
     return comm.create_async(timeout, debug).then(function (comm) {
         var api = new Api(comm);
         return api.getPublicKey_async(bip32Path).then(function (result) {

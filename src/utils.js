@@ -1,6 +1,6 @@
 /********************************************************************************
 *   Stellar Ledger API
-*   (c) 2017 LeNonDupe
+*   (c) 2017-2018 LeNonDupe
 *
 *  Licensed under the Apache License, Version 2.0 (the "License");
 *  you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 'use strict';
 
 var Q = require('q');
-var crc = require('crc');
+var crc16xmodem = require('crc/lib/crc16_xmodem.js');
 var base32 = require('base32.js');
 var nacl = require("tweetnacl");
 
@@ -63,7 +63,7 @@ StellarLedgerUtils.encodeEd25519PublicKey = function(rawPublicKey) {
     var versionBuffer = Buffer.from([versionByte]);
     var payload       = Buffer.concat([versionBuffer, data]);
     var checksum      = Buffer.alloc(2);
-    checksum.writeUInt16LE(crc.crc16xmodem(payload), 0);
+    checksum.writeUInt16LE(crc16xmodem(payload), 0);
     var unencoded     = Buffer.concat([payload, checksum]);
     return base32.encode(unencoded);
 };

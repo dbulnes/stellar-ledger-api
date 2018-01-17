@@ -10,5 +10,6 @@ test/sendTransaction.js
 test/runScript-browser.js
 browser/stellar-ledger-api.js
 browser/stellar-ledger-api.min.js
+browser/test.js
 HttpsServer.py
 .gitignore

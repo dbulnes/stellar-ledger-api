@@ -1,12 +1,13 @@
 <html>
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stellar-sdk/0.8.0/stellar-sdk.js"></script>
     <script src="../browser/stellar-ledger-api.js"></script>
-    <script src="runScript-browser.js"></script>
+    <script src="../browser/test.js"></script>
     <script>
         function selectAndRun() {
-            var select = document.getElementById('script');
-            var script = select.options[select.selectedIndex].text;
-            runScript(script);
+            var select = document.getElementById('operation');
+            var operation = select.options[select.selectedIndex].text;
+            runScript('testSignTx', operation);
         }
         function connect() {
             displayMesage('Connect your Ledger');
@@ -23,20 +24,32 @@
             document.getElementById('msg').innerHTML = msg;
         }
         function setFormDisabled(disabled) {
-            document.getElementById('script').disabled = disabled;
-            document.getElementById('runScript').disabled = disabled;
+            document.getElementById('operation').disabled = disabled;
+            document.getElementById('signTx').disabled = disabled;
         }
     </script>
 </head>
 <body onload="connect();">
 <div id="msg"></div>
 <div id="form">
-    <select id="script" disabled>
-        <option>testGetPublicKey</option>
-        <option>testSignTx</option>
-        <option>testSignTxHash</option>
+    <select id="operation" disabled>
+        <option>createAccount</option>
+        <option>payment</option>
+        <option>pathPayment</option>
+        <option>createOffer</option>
+        <option>removeOffer</option>
+        <option>changeOffer</option>
+        <option>passiveOffer</option>
+        <option>changeTrust</option>
+        <option>removeTrust</option>
+        <option>allowTrust</option>
+        <option>revokeTrust</option>
+        <option>setOptions</option>
+        <option>accountMerge</option>
+        <option>manageData</option>
+        <option>inflation</option>
     </select>
-    <input id='runScript' type="button" onClick="selectAndRun()" value="run script" disabled>
+    <input id='signTx' type="button" onClick="selectAndRun()" value="Sign" disabled>
 </div>
 </body>
 </html>
