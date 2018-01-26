@@ -46,12 +46,12 @@ StellarLedgerUtils.foreach = function (arr, callback) {
 			deferred.resolve(result);
 			return ;
 		}
-		callback(array[index], index).then(function (res) {
+		return callback(array[index], index).then(function (res) {
 			result.push(res);
 			iterate(index + 1, array, result);
-		}).fail(function (ex) {
+		}).catch(function (ex) {
 			deferred.reject(ex);
-		}).done();
+		});
 	};
 	iterate(0, arr, []);
 	return deferred.promise;
