@@ -55,14 +55,14 @@ StellarLedgerApi.prototype.getAppConfiguration_async = function() {
     });
 };
 
-StellarLedgerApi.prototype.getPublicKey_async = function(path, validateKeypair, returnChainCode) {
+StellarLedgerApi.prototype.getPublicKey_async = function(path, validateKeypair, confirm) {
     checkStellarBip32Path(path);
     var splitPath = utils.splitPath(path);
     var buffer = Buffer.alloc(5 + 1 + splitPath.length * 4);
     buffer[0] = CLA;
     buffer[1] = INS_GET_PK;
     buffer[2] = (validateKeypair ? 0x01 : 0x00);
-    buffer[3] = (returnChainCode ? 0x01 : 0x00);
+    buffer[3] = (confirm ? 0x01 : 0x00);
     buffer[4] = 1 + splitPath.length * 4;
     buffer[5] = splitPath.length;
     splitPath.forEach(function (element, index) {
@@ -79,13 +79,9 @@ StellarLedgerApi.prototype.getPublicKey_async = function(path, validateKeypair, 
         result['publicKey'] = utils.encodeEd25519PublicKey(rawPublicKey);
         if (validateKeypair) {
             var signature = response.slice(offset, offset + 64);
-            offset += 64;
             if (!utils.verifyEd25519Signature(verifyMsg, signature, rawPublicKey)) {
                 throw new Error('Bad signature. Keypair is invalid. Please report this.');
             }
-        }
-        if (returnChainCode) {
-            result['chainCode'] = response.slice(offset, offset + 32).toString('hex');
         }
         return result;
     });

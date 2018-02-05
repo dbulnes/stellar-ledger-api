@@ -17,7 +17,7 @@
 
 var bip32Path = "44'/148'/0'";
 var returnSignature = true;
-var returnChainCode = true;
+var confirm = false;
 
 var timeout = 0;
 var debug = true;
@@ -29,9 +29,8 @@ function runTest(comm, Api) {
 
     return comm.create_async(timeout, debug).then(function (comm) {
         var api = new Api(comm);
-        api.getPublicKey_async(bip32Path, returnSignature, returnChainCode).then(function (result) {
+        api.getPublicKey_async(bip32Path, returnSignature, confirm).then(function (result) {
             console.log('publicKey: ' + result['publicKey']);
-            console.log('chainCode: ' + result['chainCode']);
         }).catch(function (err) {
             console.log(err);
         });
